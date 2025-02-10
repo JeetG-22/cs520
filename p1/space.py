@@ -1,4 +1,4 @@
 from ship import Ship
 
-vessel = Ship(D = 7)
+vessel = Ship(D = 40)
 print(vessel)

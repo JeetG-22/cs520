@@ -27,7 +27,6 @@ class Ship:
         set_one_neighbour.add((initial_open_cell_row, initial_open_cell_col + 1))
         set_one_neighbour.add((initial_open_cell_row, initial_open_cell_col - 1))
         list_one_neighbour = list(set_one_neighbour)
-        print("Starting Cell: ", self.open_cells)
         
         neighbour_directions = [(1, 0), (-1, 0), (0, 1), (0, -1)]
         while(list_one_neighbour):
@@ -52,15 +51,11 @@ class Ship:
                     else:
                         set_one_neighbour.add(neighbour)
                         list_one_neighbour.append(neighbour)
-                        
-        print("Set Dim: ", len(set_one_neighbour), "\n", set_one_neighbour)
-        print("Open Cells Dim: ", len(self.open_cells), "\n", self.open_cells)
         
         print(f"% Of Open Cells Before Deadend: {100 * np.count_nonzero(self.SHIP)/(self.N**2)}%")
         
         #init deadends
         deadend_open_cells = [k for k, v in self.open_cells.items() if v == 1]
-        print("Before 50% Cut: ", deadend_open_cells)
         
         #for randomization of half the cells chosen
         DEADEND_RATE = len(deadend_open_cells) // 2 #~50%
@@ -69,13 +64,10 @@ class Ship:
         
         #convert to dictionary 
         deadend_open_cells = {item: [] for item in deadend_open_cells}
-        print("After 50% Cut: ", deadend_open_cells)
         
         #gives you all the closed cells that have at least 1 open neighbour 
         closed_cells = set_one_neighbour - self.open_cells.keys()
-        print(closed_cells)
         
-        print("Before Deadends:\n", self.SHIP)
         for coords in deadend_open_cells.keys():
             row, col = coords
             #get all neighbours of deadend
@@ -84,14 +76,11 @@ class Ship:
                 if(potential_neightbor in closed_cells): #no need to check grid constraints with the closed_cells set
                     deadend_open_cells[coords].append(potential_neightbor)
             
-            print("deadend open cells:", deadend_open_cells)        
             #select random neighbour to be an open cell
             closed_random_neighbour = deadend_open_cells[coords].pop(random.randint(0, len(deadend_open_cells[coords]) - 1))
             self.SHIP[closed_random_neighbour[0]][closed_random_neighbour[1]] = 1
             self.open_cells[closed_random_neighbour] = 1 #TODO: not correct: figure out how to get the count of open neighbours efficiently
             self.open_cells[coords] += 1 #update open neighbour count
-            print("closed random neighbour:", closed_random_neighbour)
-        print("After Deadends:\n", self.SHIP)
         print(f"% Of Open Cells After Deadend: {100 * np.count_nonzero(self.SHIP)/(self.N**2)}%")
                     
             
