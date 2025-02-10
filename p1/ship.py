@@ -2,7 +2,7 @@ import numpy as np
 import random
 
 class Ship:
-    # -1 = button cell, 0 = closed cell, 1 = open cell, 2 = fire cell
+    # 0 = closed cell, 1 = open cell, 2 = bot cell, 3 = fire cell, 4 = button cell
     SHIP = None
     N = None
     open_cells = {}
@@ -82,6 +82,15 @@ class Ship:
             self.open_cells[closed_random_neighbour] = 1 #TODO: not correct: figure out how to get the count of open neighbours efficiently
             self.open_cells[coords] += 1 #update open neighbour count
         print(f"% Of Open Cells After Deadend: {100 * np.count_nonzero(self.SHIP)/(self.N**2)}%")
+    def place_entities(self):
+        open_cells_list = list(self.open_cells.keys())
+        fire_cell = open_cells_list.pop(random.randint(0, len(open_cells_list) - 1))
+        self.SHIP[fire_cell[0]][fire_cell[1]] = 3
+        button_cell = open_cells_list.pop(random.randint(0, len(open_cells_list) - 1))
+        self.SHIP[button_cell[0]][button_cell[1]] = 4
+        bot_cell = open_cells_list.pop(random.randint(0, len(open_cells_list) - 1))
+        self.SHIP[bot_cell[0]][bot_cell[1]] = 2
+        return fire_cell, button_cell, bot_cell
                     
             
     def __str__(self):
