@@ -13,7 +13,7 @@ class Ship:
         
     def init_ship(self):
         list_one_neighbour = [] #for efficiency when randomly selecting a cell with one neighbour
-        dict_one_neighbour = {}
+        set_one_neighbour = set()
         
         initial_open_cell_row = random.randint(1, self.N-2)
         initial_open_cell_col = random.randint(1, self.N-2)
@@ -22,45 +22,41 @@ class Ship:
         self.open_cells.add((initial_open_cell_row, initial_open_cell_col))
         
         #add all the initial neighbours of the open cell 
-        dict_one_neighbour[(initial_open_cell_row + 1, initial_open_cell_col)] = 1
-        dict_one_neighbour[(initial_open_cell_row - 1, initial_open_cell_col)] = 1
-        dict_one_neighbour[(initial_open_cell_row, initial_open_cell_col + 1)] = 1
-        dict_one_neighbour[(initial_open_cell_row, initial_open_cell_col - 1)] = 1
-        list_one_neighbour = list(dict_one_neighbour)
-        print(dict_one_neighbour)
+        set_one_neighbour.add((initial_open_cell_row + 1, initial_open_cell_col))
+        set_one_neighbour.add((initial_open_cell_row - 1, initial_open_cell_col))
+        set_one_neighbour.add((initial_open_cell_row, initial_open_cell_col + 1))
+        set_one_neighbour.add((initial_open_cell_row, initial_open_cell_col - 1))
+        list_one_neighbour = list(set_one_neighbour)
+        print("Starting Cell: ", self.open_cells)
         
         neighbour_directions = [(1, 0), (-1, 0), (0, 1), (0, -1)]
-        while(list_one_neighbour.__len__() > 0):
+        while(list_one_neighbour):
             #pick a random closed cell with one open neighbour
             random_cell = list_one_neighbour.pop(random.randint(0, len(list_one_neighbour) - 1))
             self.open_cells.add(random_cell)
             self.SHIP[random_cell[0]][random_cell[1]] = 1 #update ship
-            print("Removed Cell", random_cell)
-            print(self.SHIP)
             
             #add neighbours to set/list
             for(i, j) in neighbour_directions:
                 #grid constraint edge cases
                 if(random_cell[0] + i >= 0 and random_cell[0] + i < self.N and random_cell[1] + j >= 0 and random_cell[1] + j < self.N):
                     neighbour = (random_cell[0] + i, random_cell[1] + j)
-                    print("Before: ", dict_one_neighbour)
-                    if(neighbour in self.open_cells): continue
+                    if(neighbour in self.open_cells): #check to see if it is an open cell already
+                        continue
+                    
                     #check to see if adding this closed cell will potentially give it more than 1 open neighbour
-                    if(neighbour in dict_one_neighbour): 
-                        print("remove nei", neighbour)
-                        dict_one_neighbour[neighbour] += 1
+                    if(neighbour in set_one_neighbour): 
                         if(neighbour in list_one_neighbour): #case for if it is deleted in a previous call
                             list_one_neighbour.remove(neighbour)
                     else:
-                        print("add nei", neighbour)
-                        dict_one_neighbour[neighbour] = 1
+                        set_one_neighbour.add(neighbour)
                         list_one_neighbour.append(neighbour)
+                        
+        print("Open Cells:", self.open_cells)
+        print("Set Dim: ", len(set_one_neighbour), "\n", set_one_neighbour)
+        print("List: ", list_one_neighbour)
+            
                 
-
-                print("After Dict: ", dict_one_neighbour)
-                print("After List: ", list_one_neighbour)
-                print(self.open_cells)
-            # breakpoint()                            
     def __str__(self):
         output = ''
         for i in range(self.N):
