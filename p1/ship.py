@@ -126,10 +126,10 @@ class Ship:
 
                 if self.SHIP[i][j] == 1:  # if it's an open, nonburning cell
                     
-                    count = 0 
+                    count = 0   # count the number of burning cells
                     for (dx, dy) in self.neighbour_directions:
-                        if 0 <= i + dx < self.N and 0 <= j + dy < self.N and self.SHIP[i + dx][j + dy] == 3:
-                            count += 1
+                        if (0 <= i + dx < self.N) and (0 <= j + dy < self.N):
+                            count = count + 1 if self.SHIP[i + dx][j + dy] == 3 else count
 
                     if count > 0:  # won't spread if there's no burning neighbors
                         prob = 1 - (1 - q)**count
