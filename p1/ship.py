@@ -112,7 +112,8 @@ class Ship:
         bot_cell = open_cells_list.pop(random.randint(0, len(open_cells_list) - 1))
         self.SHIP[bot_cell[0]][bot_cell[1]] = 2
         return fire_cell, button_cell, bot_cell
-                    
+
+    # Executes one step of fire spreading with flammability q       
     def spread_fire(self, q):
 
         # Generate copy of the current ship
