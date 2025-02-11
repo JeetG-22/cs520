@@ -119,7 +119,7 @@ class Ship:
         # Generate copy of the current ship
         copy = self.SHIP.copy()
 
-        # For each cell check if its open and not burning, add it to the list
+        # For each cell check if its open and not burning
         # Count number of on fire neighbors
         for i in range(self.N):
             for j in range(self.N):
