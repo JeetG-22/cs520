@@ -13,6 +13,7 @@ class Ship:
         self.N = D
         self.SHIP = np.zeros((D, D), dtype=int)
         self.init_ship()
+        self.neighbour_directions = [(1, 0), (-1, 0), (0, 1), (0, -1)]
         
     # Opens cells to start creating the maze
     def init_ship(self):
@@ -33,7 +34,7 @@ class Ship:
         set_one_neighbour.add((initial_open_cell_row, initial_open_cell_col - 1))
         list_one_neighbour = list(set_one_neighbour)
         
-        neighbour_directions = [(1, 0), (-1, 0), (0, 1), (0, -1)]
+        self.neighbour_directions = [(1, 0), (-1, 0), (0, 1), (0, -1)]
 
         while(list_one_neighbour):
             # Pick a random closed cell with one open neighbour
@@ -42,7 +43,7 @@ class Ship:
             self.SHIP[random_cell[0]][random_cell[1]] = 1  # Update ship
             
             # Add neighbours to set/list
-            for (i, j) in neighbour_directions:
+            for (i, j) in self.neighbour_directions:
 
                 # If it's inside of the ship grid
                 if (random_cell[0] + i >= 0 and random_cell[0] + i < self.N and random_cell[1] + j >= 0 and random_cell[1] + j < self.N):
@@ -80,7 +81,7 @@ class Ship:
         for coords in deadend_open_cells.keys():
             row, col = coords
             # Get all neighbours of deadend
-            for(i, j) in neighbour_directions: 
+            for(i, j) in self.neighbour_directions: 
                 potential_neightbor = (row + i, col + j)
                 if(potential_neightbor in closed_cells): #no need to check grid constraints with the closed_cells set
                     deadend_open_cells[coords].append(potential_neightbor)
@@ -92,7 +93,7 @@ class Ship:
             # TODO: Jeet - is this solution correct? Dynamically updates the count of open neighbors
             print(closed_random_neighbour)
             sum = 0
-            for (i, j) in neighbour_directions: 
+            for (i, j) in self.neighbour_directions: 
                 if ((closed_random_neighbour[0] + i, closed_random_neighbour[1] + j) in self.open_cells):
                     self.open_cells[(closed_random_neighbour[0] + i, closed_random_neighbour[1] + j)] += 1 #updates surrounding open neighbour counts
                     sum += 1
@@ -101,8 +102,6 @@ class Ship:
         # Double check if implemented correctly
         print(f"% Of Open Cells After Deadend: {100 * np.count_nonzero(self.SHIP)/(self.N**2)}%")
         print(self.open_cells)
-        
-
 
     def place_entities(self):
         open_cells_list = list(self.open_cells.keys())
@@ -114,8 +113,29 @@ class Ship:
         self.SHIP[bot_cell[0]][bot_cell[1]] = 2
         return fire_cell, button_cell, bot_cell
                     
-    def spread_fire(self):
-        pass
+    def spread_fire(self, q):
+
+        # Generate copy of the current ship
+        copy = self.SHIP.copy()
+
+        # For each cell check if its open and not burning, add it to the list
+        # Count number of on fire neighbors
+        for i in range(self.N):
+            for j in range(self.N):
+
+                if self.SHIP[i][j] == 1:  # if it's an open, nonburning cell
+                    
+                    count = 0 
+                    for (dx, dy) in self.neighbour_directions:
+                        if 0 <= i + dx < self.N and 0 <= j + dy < self.N and self.SHIP[i + dx][j + dy] == 3:
+                            count += 1
+
+                    if count > 0:  # won't spread if there's no burning neighbors
+                        prob = 1 - (1 - q)**count
+                        if random.random() < prob:
+                            copy[i][j] = 3  # set on fire
+        
+        self.SHIP = copy
 
     def __str__(self):
         output = ''
@@ -124,4 +144,3 @@ class Ship:
                 output += f'{self.SHIP[i][j]} '
             output += '\n'
         return f'Vessel:\n{output}Shape: {self.SHIP.shape}'
-        
