@@ -71,6 +71,7 @@ class Ship:
         
         # Convert to dictionary 
         deadend_open_cells = {item: [] for item in deadend_open_cells}
+        print(deadend_open_cells)
         
         # Gives you all the closed cells that have at least 1 open neighbour 
         closed_cells = set_one_neighbour - self.open_cells.keys()
@@ -79,7 +80,7 @@ class Ship:
         for coords in deadend_open_cells.keys():
             row, col = coords
             # Get all neighbours of deadend
-            for(i, j) in neighbour_directions: #TODO: see if there is a more efficient solution
+            for(i, j) in neighbour_directions: 
                 potential_neightbor = (row + i, col + j)
                 if(potential_neightbor in closed_cells): #no need to check grid constraints with the closed_cells set
                     deadend_open_cells[coords].append(potential_neightbor)
@@ -89,11 +90,18 @@ class Ship:
             self.SHIP[closed_random_neighbour[0]][closed_random_neighbour[1]] = 1
 
             # TODO: Jeet - is this solution correct? Dynamically updates the count of open neighbors
-            self.open_cells[closed_random_neighbour] = sum(1 for (i, j) in neighbour_directions if (closed_random_neighbour[0] + i, closed_random_neighbour[1] + j) in self.open_cells)
-            self.open_cells[coords] += 1  # Update open neighbour count
+            print(closed_random_neighbour)
+            sum = 0
+            for (i, j) in neighbour_directions: 
+                if ((closed_random_neighbour[0] + i, closed_random_neighbour[1] + j) in self.open_cells):
+                    self.open_cells[(closed_random_neighbour[0] + i, closed_random_neighbour[1] + j)] += 1 #updates surrounding open neighbour counts
+                    sum += 1
+            self.open_cells[closed_random_neighbour] = sum
         
         # Double check if implemented correctly
         print(f"% Of Open Cells After Deadend: {100 * np.count_nonzero(self.SHIP)/(self.N**2)}%")
+        print(self.open_cells)
+        
 
 
     def place_entities(self):
