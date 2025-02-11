@@ -106,7 +106,9 @@ class Ship:
         self.SHIP[bot_cell[0]][bot_cell[1]] = 2
         return fire_cell, button_cell, bot_cell
                     
-            
+    def spread_fire(self):
+        pass
+
     def __str__(self):
         output = ''
         for i in range(self.N):
