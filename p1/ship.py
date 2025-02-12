@@ -132,6 +132,7 @@ class Ship:
         for cell in open_cells_copy.keys():
             i = cell[0]
             j = cell[1]
+
             count = 0   # count the number of burning neighbors
             for (dx, dy) in self.neighbour_directions:
                 if (0 <= i + dx < self.N) and (0 <= j + dy < self.N):
