@@ -4,14 +4,14 @@ import random
 class Ship:
 
     # 0 = closed cell, 1 = open cell, 2 = bot cell, 3 = fire cell, 4 = button cell
-    SHIP = None
+    grid = None
     N = None
     open_cells = {}
 
     # Creates ship with DxD blocked cells
     def __init__(self, D):
         self.N = D
-        self.SHIP = np.zeros((D, D), dtype=int)
+        self.grid = np.zeros((D, D), dtype=int)
         self.init_ship()
         self.neighbour_directions = [(1, 0), (-1, 0), (0, 1), (0, -1)]
         
@@ -23,7 +23,7 @@ class Ship:
         # Randomly open a square in the interior
         initial_open_cell_row = random.randint(1, self.N-2)
         initial_open_cell_col = random.randint(1, self.N-2)
-        self.SHIP[initial_open_cell_row][initial_open_cell_col] = 1 
+        self.grid[initial_open_cell_row][initial_open_cell_col] = 1 
         
         self.open_cells[(initial_open_cell_row, initial_open_cell_col)] = 0
         
@@ -40,7 +40,7 @@ class Ship:
             # Pick a random closed cell with one open neighbour
             random_cell = list_one_neighbour.pop(random.randint(0, len(list_one_neighbour) - 1))
             self.open_cells[random_cell] = 1
-            self.SHIP[random_cell[0]][random_cell[1]] = 1  # Update ship
+            self.grid[random_cell[0]][random_cell[1]] = 1  # Update ship
             
             # Add neighbours to set/list
             for (i, j) in self.neighbour_directions:
@@ -60,7 +60,7 @@ class Ship:
                         set_one_neighbour.add(neighbour)
                         list_one_neighbour.append(neighbour)
         
-        print(f"% Of Open Cells Before Deadend: {100 * np.count_nonzero(self.SHIP)/(self.N**2)}%")
+        print(f"% Of Open Cells Before Deadend: {100 * np.count_nonzero(self.grid)/(self.N**2)}%")
         
         # Collect deadends
         deadend_open_cells = [k for k, v in self.open_cells.items() if v == 1]
@@ -88,7 +88,7 @@ class Ship:
             
             # Select random neighbour to be an open cell
             closed_random_neighbour = deadend_open_cells[coords].pop(random.randint(0, len(deadend_open_cells[coords]) - 1))
-            self.SHIP[closed_random_neighbour[0]][closed_random_neighbour[1]] = 1
+            self.grid[closed_random_neighbour[0]][closed_random_neighbour[1]] = 1
 
             # TODO: Jeet - is this solution correct? Dynamically updates the count of open neighbors
             print(closed_random_neighbour)
@@ -100,17 +100,17 @@ class Ship:
             self.open_cells[closed_random_neighbour] = sum
         
         # Double check if implemented correctly
-        print(f"% Of Open Cells After Deadend: {100 * np.count_nonzero(self.SHIP)/(self.N**2)}%")
+        print(f"% Of Open Cells After Deadend: {100 * np.count_nonzero(self.grid)/(self.N**2)}%")
         print(self.open_cells)
 
     def place_entities(self):
         open_cells_list = list(self.open_cells.keys())
         fire_cell = open_cells_list.pop(random.randint(0, len(open_cells_list) - 1))
-        self.SHIP[fire_cell[0]][fire_cell[1]] = 3
+        self.grid[fire_cell[0]][fire_cell[1]] = 3
         button_cell = open_cells_list.pop(random.randint(0, len(open_cells_list) - 1))
-        self.SHIP[button_cell[0]][button_cell[1]] = 4
+        self.grid[button_cell[0]][button_cell[1]] = 4
         bot_cell = open_cells_list.pop(random.randint(0, len(open_cells_list) - 1))
-        self.SHIP[bot_cell[0]][bot_cell[1]] = 2
+        self.grid[bot_cell[0]][bot_cell[1]] = 2
         
         #pop these cells as they are not considered open anymore 
         self.open_cells.pop(fire_cell)
@@ -123,7 +123,7 @@ class Ship:
     def spread_fire(self, q):
 
         # Generate copy of the current ship
-        copy = self.SHIP.copy()
+        copy = self.grid.copy()
 
         # Copy of dict so it doesn't change size as we pop cells that have caught on fire
         open_cells_copy = self.open_cells.copy()
@@ -136,7 +136,7 @@ class Ship:
             count = 0   # count the number of burning neighbors
             for (dx, dy) in self.neighbour_directions:
                 if (0 <= i + dx < self.N) and (0 <= j + dy < self.N):
-                    count = count + 1 if self.SHIP[i + dx][j + dy] == 3 else count
+                    count = count + 1 if self.grid[i + dx][j + dy] == 3 else count
 
             if count > 0:  # won't spread if there's no burning neighbors
                 prob = 1 - (1 - q)**count
@@ -144,12 +144,12 @@ class Ship:
                     copy[i][j] = 3  # set on fire
                     self.open_cells.pop(cell)  # remove from open cells dict
         
-        self.SHIP = copy
+        self.grid = copy
                 
     def __str__(self):
         output = ''
         for i in range(self.N):
             for j in range(self.N):
-                output += f'{self.SHIP[i][j]} '
+                output += f'{self.grid[i][j]} '
             output += '\n'
-        return f'Vessel:\n{output}Shape: {self.SHIP.shape}'
+        return f'Vessel:\n{output}Shape: {self.grid.shape}'
