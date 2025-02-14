@@ -7,7 +7,7 @@ class Bot1:
     def __init__(self, SHIP):
         self.SHIP = SHIP
 
-    def create_plan(self):
+    def get_path(self):
         # Get source node
         self.bot_start = self.get_position()
         
@@ -19,27 +19,38 @@ class Bot1:
         visited = set()
         visited.add(self.bot_start)
 
+        # Keep track of parent nodes/path
+        parent = {self.bot_start: None}
+
         while self.queue:
             cell = self.queue.pop(0)
-            print(cell)  # for debugging
 
             # Check if we reached the button
             if self.SHIP.grid[cell[0]][cell[1]] == 4:
-                break
+                return self.get_solution(parent, cell)
 
             # Get all neighbors
             for (dx, dy) in self.SHIP.neighbour_directions:
                 
-                pass
+                neighbor = (cell[0] + dx, cell[1] + dy)
+
                 # Check that it's not in the visited set
+                if neighbor not in visited:
 
-                # Check that its in the grid
+                    # Check that its in the grid
+                    if 0 <= neighbor[0] < self.SHIP.N and 0 <= neighbor[1] < self.SHIP.N:
 
-                # Check that it's not a a fire cell
+                        # Check that it's not a a fire cell or closed cell
+                        if self.SHIP.grid[neighbor[0]][neighbor[1]] != 3 and self.SHIP.grid[neighbor[0]][neighbor[1]] != 0:
 
-                # Add it to the queue
+                            # Add it to the queue
+                            self.queue.append(neighbor)
+                            visited.add(neighbor)
+                            parent[neighbor] = cell
 
+        return None  # No solution
         
+
     def get_position(self):
         pos = (0, 0)
 
@@ -49,5 +60,17 @@ class Bot1:
                 if self.SHIP.grid[i][j] == 2:
                     pos = (i, j)
                     break
-        
+    
         return pos
+    
+    # Returns the solution path once BFS finds the button
+    def get_solution(self, parent, end):
+
+        path = []
+
+        while end is not None:
+            path.append(end)
+            end = parent[end]
+
+        path.reverse()
+        return path
