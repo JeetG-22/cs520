@@ -1,4 +1,4 @@
-from ship import Ship
+import ship
 
 # Uses BFS to find the shortest path to the button
 # Avoids the initial fire cell but ignore the updated fire
@@ -6,6 +6,36 @@ class Bot1:
 
     def __init__(self, SHIP):
         self.SHIP = SHIP
+
+    # Returns true if the bot successfully gets to the button without
+    # hitting a fire cell in its path.
+    def mission_success(self, flammability):
+        
+        path = self.get_path()
+
+        if path is not None:
+            curr = path[0]
+        
+        path_index = 0
+        curr_val = self.SHIP.grid[curr[0]][curr[1]]
+
+        # while the bot is not in a fire cell
+        while curr_val != 3:
+
+            # move bot to the next cell
+            curr = path[path_index]
+            curr_val = self.SHIP.grid[curr[0]][curr[1]]
+            path_index += 1
+
+            # if button cell is reached, return True
+            if curr_val == 4:
+                return True
+
+            # spread the fire
+            self.SHIP.spread_fire(flammability)
+        
+        # if it hits a fire cell, mission failed
+        return False
 
     def get_path(self):
         # Get source node

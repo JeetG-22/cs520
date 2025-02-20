@@ -6,4 +6,4 @@ vessel.place_entities()
 print(vessel)
 
 bot = Bot1(vessel)
-print(bot.create_plan())
+print(bot.mission_success(0.9))
