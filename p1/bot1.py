@@ -2,6 +2,7 @@ import ship
 
 # Uses BFS to find the shortest path to the button
 # Avoids the initial fire cell but ignore the updated fire
+# 0 = closed cell, 1 = open cell, 2 = bot cell, 3 = fire cell, 4 = button cell
 class Bot1:
 
     def __init__(self, SHIP):
@@ -13,9 +14,7 @@ class Bot1:
         
         path = self.get_path()
 
-        if path is not None:
-            curr = path[0]
-        
+        curr = path[0]
         path_index = 0
         curr_val = self.SHIP.grid[curr[0]][curr[1]]
 

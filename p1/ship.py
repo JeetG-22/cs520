@@ -125,26 +125,24 @@ class Ship:
         # Generate copy of the current ship
         copy = self.grid.copy()
 
-        # Copy of dict so it doesn't change size as we pop cells that have caught on fire
-        open_cells_copy = self.open_cells.copy()
+        # For each cell check if its open and not burning
+        # Count number of on fire neighbors
+        for i in range(self.N):
+            for j in range(self.N):
 
-        # For each open non burning cell, count number of on fire neighbors and store it
-        for cell in open_cells_copy.keys():
-            i = cell[0]
-            j = cell[1]
+                if self.grid[i][j] == 1:  # if it's an open, nonburning cell
+                    count = 0   # count the number of burning cells
 
-            count = 0   # count the number of burning neighbors
-            for (dx, dy) in self.neighbour_directions:
-                if (0 <= i + dx < self.N) and (0 <= j + dy < self.N):
-                    count = count + 1 if self.grid[i + dx][j + dy] == 3 else count
+                    for (dx, dy) in self.neighbour_directions:
+                        if (0 <= i + dx < self.N) and (0 <= j + dy < self.N):
+                            count = count + 1 if self.grid[i + dx][j + dy] == 3 else count
 
-            if count > 0:  # won't spread if there's no burning neighbors
-                prob = 1 - (1 - q)**count
-                if random.random() < prob:
-                    copy[i][j] = 3  # set on fire
-                    self.open_cells.pop(cell)  # remove from open cells dict
+                        if count > 0:  # won't spread if there's no burning neighbors
+                            prob = 1 - (1 - q)**count
+                            if random.random() < prob:
+                                copy[i][j] = 3  # set on fire
         
-        self.grid = copy
+            self.grid = copy
                 
     def __str__(self):
         output = ''
