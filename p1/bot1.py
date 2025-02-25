@@ -38,7 +38,7 @@ class Bot1:
 
     def get_path(self):
         # Get source node
-        self.bot_start = self.get_position()
+        self.bot_start, self.fire_start = self.get_position()
         
         # Add it to the queue
         self.queue = []
@@ -81,16 +81,19 @@ class Bot1:
         
 
     def get_position(self):
-        pos = (0, 0)
-
+        bot_pos = (0, 0)
+        init_fire_pos = (0,0)
+        
         # Find current position
         for i in range(self.SHIP.N):
             for j in range(self.SHIP.N):
                 if self.SHIP.grid[i][j] == 2:
-                    pos = (i, j)
-                    break
+                    bot_pos = (i, j)
+                if self.SHIP.grid[i][j] == 3:
+                    init_fire_pos = (i,j)
+                
     
-        return pos
+        return [bot_pos, init_fire_pos]
     
     # Returns the solution path once BFS finds the button
     def get_solution(self, parent, end):
