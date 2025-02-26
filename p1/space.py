@@ -23,7 +23,7 @@ print(vessel2)
 
 print("\nBot2")
 bot2 = Bot2(vessel2)
-print(bot2.mission_success(0))
+print(bot2.mission_success(0.3))
 
 print("\n\nVessel After:")
 print(vessel2)

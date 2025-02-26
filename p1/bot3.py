@@ -3,7 +3,7 @@ import ship
 # Uses BFS to find the shortest path to the button
 # Avoids the initial fire cell but ignore the updated fire
 # 0 = closed cell, 1 = open cell, 2 = bot cell, 3 = fire cell, 4 = button cell
-class Bot1:
+class Bot2:
 
     def __init__(self, SHIP):
         self.SHIP = SHIP
@@ -11,37 +11,41 @@ class Bot1:
     # Returns true if the bot successfully gets to the button without
     # hitting a fire cell in its path.
     def mission_success(self, flammability):
+        bot_pos = self.get_position()
+        visited_positions = [bot_pos]
         
-        path = self.get_path()
-        
-        if path is None:
-            return False
+        #loop until bot finds correct path or fails
+        while True:
+            path = self.get_path(bot_pos)
+            
+            # print(path)
+            
+            if path is None:
+                return False, []
 
-        curr = path[0]
-        path_index = 0
-        curr_val = self.SHIP.grid[curr[0]][curr[1]]
-
-        # while the bot is not in a fire cell
-        while curr_val != 3:
-
-            # move bot to the next cell
-            curr = path[path_index]
-            curr_val = self.SHIP.grid[curr[0]][curr[1]]
-            path_index += 1
+            # move bot to the next cell & update the new position on grid for the next path 
+            next_pos = path[1]
+            bot_pos = next_pos
+            
+            #update new path 
+            visited_positions.append(bot_pos)
 
             # if button cell is reached, return True
-            if curr_val == 4:
-                return True
-
-            # spread the fire
-            self.SHIP.spread_fire(flammability)
+            if self.SHIP.grid[next_pos[0]][next_pos[1]] == 4:
+                return True, visited_positions
         
-        # if it hits a fire cell, mission failed
-        return False
+            # spread the fire after bot moves
+            self.SHIP.spread_fire(flammability)
+           
+            # check to see if the new fire spread is on the bot's current position
+            if self.SHIP.grid[next_pos[0]][next_pos[1]] == 3:
+                return False, []
 
-    def get_path(self):
+
+    def get_path(self, curr_pos):
+        print(self.SHIP)
         # Get source node
-        self.bot_start = self.get_position()
+        self.bot_start = curr_pos
         
         # Add it to the queue
         self.queue = []
@@ -84,14 +88,13 @@ class Bot1:
         
 
     def get_position(self):
-        pos = (0, 0)        
-        # Find current position
+        pos = (0,0)
+        # Find initial position of bot
         for i in range(self.SHIP.N):
             for j in range(self.SHIP.N):
                 if self.SHIP.grid[i][j] == 2:
-                    pos = (i, j)
+                    pos = (i,j)
                     return pos
-
     
     # Returns the solution path once BFS finds the button
     def get_solution(self, parent, end):

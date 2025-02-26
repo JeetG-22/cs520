@@ -11,46 +11,39 @@ class Bot2:
     # Returns true if the bot successfully gets to the button without
     # hitting a fire cell in its path.
     def mission_success(self, flammability):
-        
         bot_pos = self.get_position()
+        visited_positions = [bot_pos]
         
-        visited_positions = set(bot_pos)
-
-        # while the bot is not in a fire cell
+        #loop until bot finds correct path or fails
         while True:
             path = self.get_path(bot_pos)
             
-            print(path)
+            # print(path)
             
             if path is None:
-                return False
+                return False, []
 
-            # move bot to the next cell
-            curr = path[0]
-            curr_val = self.SHIP.grid[curr[0]][curr[1]]
+            # move bot to the next cell & update the new position on grid for the next path 
+            next_pos = path[1]
+            bot_pos = next_pos
             
-            #update new position of the bot on the grid
-            bot_pos = curr
+            #update new path 
+            visited_positions.append(bot_pos)
 
             # if button cell is reached, return True
-            if curr_val == 4:
-                return True
-            
-            # check to see if the fire cell is on the bot's current position
-            if curr_val == 3:
-                return False
-            
-            if bot_pos in visited_positions:
-                return False
-
-            # Mark the current position as visited
-            visited_positions.add(bot_pos)
+            if self.SHIP.grid[next_pos[0]][next_pos[1]] == 4:
+                return True, visited_positions
         
             # spread the fire after bot moves
             self.SHIP.spread_fire(flammability)
+           
+            # check to see if the new fire spread is on the bot's current position
+            if self.SHIP.grid[next_pos[0]][next_pos[1]] == 3:
+                return False, []
 
 
     def get_path(self, curr_pos):
+        # print(self.SHIP)
         # Get source node
         self.bot_start = curr_pos
         
@@ -95,11 +88,13 @@ class Bot2:
         
 
     def get_position(self):
+        pos = (0,0)
         # Find initial position of bot
         for i in range(self.SHIP.N):
             for j in range(self.SHIP.N):
                 if self.SHIP.grid[i][j] == 2:
-                    return (i, j)
+                    pos = (i,j)
+                    return pos
     
     # Returns the solution path once BFS finds the button
     def get_solution(self, parent, end):
