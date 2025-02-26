@@ -4,14 +4,12 @@ import random
 class Ship:
 
     # 0 = closed cell, 1 = open cell, 2 = bot cell, 3 = fire cell, 4 = button cell
-    grid = None
-    N = None
-    open_cells = {}
 
     # Creates ship with DxD blocked cells
     def __init__(self, D):
         self.N = D
         self.grid = np.zeros((D, D), dtype=int)
+        self.open_cells = {}
         self.init_ship()
         self.neighbour_directions = [(1, 0), (-1, 0), (0, 1), (0, -1)]
         
@@ -60,7 +58,7 @@ class Ship:
                         set_one_neighbour.add(neighbour)
                         list_one_neighbour.append(neighbour)
         
-        print(f"% Of Open Cells Before Deadend: {100 * np.count_nonzero(self.grid)/(self.N**2)}%")
+        # print(f"% Of Open Cells Before Deadend: {100 * np.count_nonzero(self.grid)/(self.N**2)}%")
         
         # Collect deadends
         deadend_open_cells = [k for k, v in self.open_cells.items() if v == 1]
@@ -72,7 +70,7 @@ class Ship:
         
         # Convert to dictionary 
         deadend_open_cells = {item: [] for item in deadend_open_cells}
-        print(deadend_open_cells)
+        # print(deadend_open_cells)
         
         # Gives you all the closed cells that have at least 1 open neighbour 
         closed_cells = set_one_neighbour - self.open_cells.keys()
@@ -91,7 +89,7 @@ class Ship:
             self.grid[closed_random_neighbour[0]][closed_random_neighbour[1]] = 1
 
             # TODO: Jeet - is this solution correct? Dynamically updates the count of open neighbors
-            print(closed_random_neighbour)
+            # print(closed_random_neighbour)
             sum = 0
             for (i, j) in self.neighbour_directions: 
                 if ((closed_random_neighbour[0] + i, closed_random_neighbour[1] + j) in self.open_cells):
@@ -100,8 +98,8 @@ class Ship:
             self.open_cells[closed_random_neighbour] = sum
         
         # Double check if implemented correctly
-        print(f"% Of Open Cells After Deadend: {100 * np.count_nonzero(self.grid)/(self.N**2)}%")
-        print(self.open_cells)
+        # print(f"% Of Open Cells After Deadend: {100 * np.count_nonzero(self.grid)/(self.N**2)}%")
+        # print(self.open_cells)
 
     def place_entities(self):
         open_cells_list = list(self.open_cells.keys())
