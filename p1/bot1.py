@@ -72,7 +72,7 @@ class Bot1:
                     # Check that its in the grid
                     if 0 <= neighbor[0] < self.SHIP.N and 0 <= neighbor[1] < self.SHIP.N:
 
-                        # Check that it's not a a fire cell or closed cell
+                        # Check that it's not the initial fire cell or closed cell
                         if self.SHIP.grid[neighbor[0]][neighbor[1]] != 3 and self.SHIP.grid[neighbor[0]][neighbor[1]] != 0:
 
                             # Add it to the queue

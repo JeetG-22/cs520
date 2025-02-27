@@ -12,6 +12,7 @@ class Ship:
         self.open_cells = {}
         self.init_ship()
         self.neighbour_directions = [(1, 0), (-1, 0), (0, 1), (0, -1)]
+        self.place_entities()
         
     # Opens cells to start creating the maze
     def init_ship(self):

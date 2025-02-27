@@ -26,7 +26,7 @@ class Bot3:
             if path is None:
                 return False, []
             
-            print(path)
+            # print(path)
         
             # move bot to the next cell & update the new position on grid for the next path 
             next_pos = path[1]
@@ -48,8 +48,8 @@ class Bot3:
 
 
     def get_path(self, curr_pos, avoid_adj_fire):
-        print(avoid_adj_fire)
-        print(self.SHIP)
+        # print(avoid_adj_fire)
+        # print(self.SHIP)
         # Get source node
         self.bot_start = curr_pos
         
