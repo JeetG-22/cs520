@@ -3,7 +3,7 @@ import ship
 # Uses BFS to find the shortest path to the button
 # Avoids the initial fire cell but ignore the updated fire
 # 0 = closed cell, 1 = open cell, 2 = bot cell, 3 = fire cell, 4 = button cell
-class Bot2:
+class Bot3:
 
     def __init__(self, SHIP):
         self.SHIP = SHIP
@@ -16,13 +16,18 @@ class Bot2:
         
         #loop until bot finds correct path or fails
         while True:
-            path = self.get_path(bot_pos)
+            path = self.get_path(bot_pos, avoid_adj_fire=True)
             
-            # print(path)
+            #check if there is a path with no open cell burning neighbors
+            if path is None:
+                path = self.get_path(bot_pos, avoid_adj_fire=False)
             
+            #check if there is a path avoiding currently burning cells
             if path is None:
                 return False, []
-
+            
+            print(path)
+        
             # move bot to the next cell & update the new position on grid for the next path 
             next_pos = path[1]
             bot_pos = next_pos
@@ -42,7 +47,8 @@ class Bot2:
                 return False, []
 
 
-    def get_path(self, curr_pos):
+    def get_path(self, curr_pos, avoid_adj_fire):
+        print(avoid_adj_fire)
         print(self.SHIP)
         # Get source node
         self.bot_start = curr_pos
@@ -71,22 +77,36 @@ class Bot2:
                 neighbor = (cell[0] + dx, cell[1] + dy)
 
                 # Check that it's not in the visited set
-                if neighbor not in visited:
+                if neighbor in visited:
+                    continue
 
-                    # Check that its in the grid
-                    if 0 <= neighbor[0] < self.SHIP.N and 0 <= neighbor[1] < self.SHIP.N:
+                # Check that its in the grid
+                if not (0 <= neighbor[0] < self.SHIP.N and 0 <= neighbor[1] < self.SHIP.N):
+                    continue
+            
+                # Check that it's not a a fire cell or closed cell
+                if self.SHIP.grid[neighbor[0]][neighbor[1]] != 3 and self.SHIP.grid[neighbor[0]][neighbor[1]] != 0:
+                    
+                    if(avoid_adj_fire and self.has_adj_fires(neighbor)):
+                        continue
 
-                        # Check that it's not a a fire cell or closed cell
-                        if self.SHIP.grid[neighbor[0]][neighbor[1]] != 3 and self.SHIP.grid[neighbor[0]][neighbor[1]] != 0:
-
-                            # Add it to the queue
-                            self.queue.append(neighbor)
-                            visited.add(neighbor)
-                            parent[neighbor] = cell
+                    # Add it to the queue
+                    self.queue.append(neighbor)
+                    visited.add(neighbor)
+                    parent[neighbor] = cell
 
         return None  # No solution
         
 
+    #returns true if cell has neighbors that are burning
+    def has_adj_fires(self, neighbor):
+        for (dx, dy) in self.SHIP.neighbour_directions:
+            adj_neighbor = (neighbor[0] + dx, neighbor[1] + dy)
+            if 0 <= adj_neighbor[0] < self.SHIP.N and 0 <= adj_neighbor[1] < self.SHIP.N:
+                if self.SHIP.grid[adj_neighbor[0]][adj_neighbor[1]] == 3:
+                    return True
+        return False
+    
     def get_position(self):
         pos = (0,0)
         # Find initial position of bot
