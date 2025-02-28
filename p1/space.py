@@ -81,8 +81,8 @@ print("Sucesses: ", count_suc2)
 print("Failure: ", count_fail2)
 
 print("Bot3: ") 
-print("Sucesses: ", count_suc3)
-print("Failure: ", count_fail3)
+print("Successes: ", count_suc3)
+print("FailureS: ", count_fail3)
 
 # count_suc = count_fail = 0
 # for i in range(0,N):
@@ -109,7 +109,3 @@ print("Failure: ", count_fail3)
 # print("Bot3: ") 
 # print("Sucesses: ", count_suc)
 # print("Failure", count_fail)
-
-
-
-

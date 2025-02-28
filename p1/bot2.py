@@ -16,12 +16,8 @@ class Bot2:
         
         #loop until bot finds correct path or fails
         while True:
+
             path = self.get_path(bot_pos)
-            
-            # print(path)
-            
-            if path is None:
-                return False, []
 
             # move bot to the next cell & update the new position on grid for the next path 
             next_pos = path[1]
@@ -43,7 +39,6 @@ class Bot2:
 
 
     def get_path(self, curr_pos):
-        # print(self.SHIP)
         # Get source node
         self.bot_start = curr_pos
         
@@ -88,12 +83,17 @@ class Bot2:
         
 
     def get_position(self):
+
         pos = (0,0)
+
         # Find initial position of bot
         for i in range(self.SHIP.N):
+
             for j in range(self.SHIP.N):
+
                 if self.SHIP.grid[i][j] == 2:
-                    pos = (i,j)
+                    
+                    pos = (i, j)
                     return pos
     
     # Returns the solution path once BFS finds the button
