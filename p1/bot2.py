@@ -13,16 +13,16 @@ class Bot2:
     def mission_success(self, flammability):
         bot_pos = self.get_position()
         visited_positions = [bot_pos]
+        path = self.get_path(bot_pos)
         
         #loop until bot finds correct path or fails
-        while True:
-            path = self.get_path(bot_pos)
+        while path and len(path) > 1:
 
             # move bot to the next cell & update the new position on grid for the next path 
             next_pos = path[1]
             bot_pos = next_pos
             
-            #update new path 
+            # update new path 
             visited_positions.append(bot_pos)
 
             # if button cell is reached, return True
@@ -35,6 +35,10 @@ class Bot2:
             # check to see if the new fire spread is on the bot's current position
             if self.SHIP.grid[bot_pos[0]][bot_pos[1]] == 3:
                 return False, []
+
+            path = self.get_path(bot_pos)
+        
+        return False, []
 
 
     def get_path(self, curr_pos):
