@@ -53,7 +53,7 @@ count_suc3 = 0
 count_fail3 = 0
 
 for i in range(0, N):
-    vessel = Ship(D = 40)
+    vessel = Ship(D = 5)
     
     bot1 = Bot1(copy.deepcopy(vessel))
     if bot1.mission_success(1): 
