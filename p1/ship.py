@@ -141,7 +141,7 @@ class Ship:
                             if random.random() < prob:
                                 copy[i][j] = 3  # set on fire
         
-            self.grid = copy
+        self.grid = copy
                 
     def __str__(self):
         output = ''

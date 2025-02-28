@@ -45,12 +45,18 @@ import copy
 
 N = 50
 
-count_suc1 = count_fail1 = count_suc2 = count_fail2 = count_suc3 = count_fail3 = 0
-for i in range(0,N):
+count_suc1 = 0
+count_fail1 = 0
+count_suc2 = 0
+count_fail2 = 0
+count_suc3 = 0
+count_fail3 = 0
+
+for i in range(0, N):
     vessel = Ship(D = 40)
     
     bot1 = Bot1(copy.deepcopy(vessel))
-    if bot1.mission_success(1):
+    if bot1.mission_success(1): 
         count_suc1 += 1
     else:
         count_fail1 += 1
@@ -68,16 +74,16 @@ for i in range(0,N):
         count_fail3 += 1
     
 print("Bot1: ") 
-print("Sucesses: ", count_suc1)
-print("Failure", count_fail1)
+print("Successes: ", count_suc1)
+print("Failures: ", count_fail1)
 
 print("Bot2: ") 
-print("Sucesses: ", count_suc2)
-print("Failure", count_fail2)
+print("Successes: ", count_suc2)
+print("Failures: ", count_fail2)
 
 print("Bot3: ") 
-print("Sucesses: ", count_suc3)
-print("Failure: ", count_fail3)
+print("Successes: ", count_suc3)
+print("FailureS: ", count_fail3)
 
 # count_suc = count_fail = 0
 # for i in range(0,N):
@@ -104,7 +110,3 @@ print("Failure: ", count_fail3)
 # print("Bot3: ") 
 # print("Sucesses: ", count_suc)
 # print("Failure", count_fail)
-
-
-
-
