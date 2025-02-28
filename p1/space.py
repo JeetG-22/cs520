@@ -43,37 +43,42 @@ import copy
 # print("\n\nVessel After:")
 # print(vessel3)
 
-N = 50
+N = 5
+
+q_values = [round(i * .05, 2) for i in range (1, 21)]
+print(q_values)
 
 count_suc1 = count_fail1 = count_suc2 = count_fail2 = count_suc3 = count_fail3 = 0
-for i in range(0,N):
-    vessel = Ship(D = 40)
-    
-    bot1 = Bot1(copy.deepcopy(vessel))
-    if bot1.mission_success(1):
-        count_suc1 += 1
-    else:
-        count_fail1 += 1
+
+for q in q_values:
+    for i in range(0,N):
+        vessel = Ship(D = 20)
         
-    bot2 = Bot2(copy.deepcopy(vessel))
-    if bot2.mission_success(1)[0]:
-        count_suc2 += 1
-    else:
-        count_fail2 += 1
-        
-    bot3 = Bot3(copy.deepcopy(vessel))
-    if bot3.mission_success(1)[0]:
-        count_suc3 += 1
-    else:
-        count_fail3 += 1
+        bot1 = Bot1(copy.deepcopy(vessel))
+        if bot1.mission_success(q)[0]:
+            count_suc1 += 1
+        else:
+            count_fail1 += 1
+            
+        bot2 = Bot2(copy.deepcopy(vessel))
+        if bot2.mission_success(q)[0]:
+            count_suc2 += 1
+        else:
+            count_fail2 += 1
+            
+        bot3 = Bot3(copy.deepcopy(vessel))
+        if bot3.mission_success(q)[0]:
+            count_suc3 += 1
+        else:
+            count_fail3 += 1
     
 print("Bot1: ") 
 print("Sucesses: ", count_suc1)
-print("Failure", count_fail1)
+print("Failure: ", count_fail1)
 
 print("Bot2: ") 
 print("Sucesses: ", count_suc2)
-print("Failure", count_fail2)
+print("Failure: ", count_fail2)
 
 print("Bot3: ") 
 print("Sucesses: ", count_suc3)

@@ -15,7 +15,7 @@ class Bot1:
         path = self.get_path()
         
         if path is None:
-            return False
+            return False, []
 
         curr = path[0]
         path_index = 0
@@ -31,13 +31,13 @@ class Bot1:
 
             # if button cell is reached, return True
             if curr_val == 4:
-                return True
+                return True, path
 
             # spread the fire
             self.SHIP.spread_fire(flammability)
         
         # if it hits a fire cell, mission failed
-        return False
+        return False, []
 
     def get_path(self):
         # Get source node

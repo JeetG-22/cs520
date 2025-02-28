@@ -36,14 +36,14 @@ class Bot3:
             visited_positions.append(bot_pos)
 
             # if button cell is reached, return True
-            if self.SHIP.grid[next_pos[0]][next_pos[1]] == 4:
+            if self.SHIP.grid[bot_pos[0]][bot_pos[1]] == 4:
                 return True, visited_positions
         
             # spread the fire after bot moves
             self.SHIP.spread_fire(flammability)
            
             # check to see if the new fire spread is on the bot's current position
-            if self.SHIP.grid[next_pos[0]][next_pos[1]] == 3:
+            if self.SHIP.grid[bot_pos[0]][bot_pos[1]] == 3:
                 return False, []
 
 
