@@ -52,10 +52,10 @@ count_suc1 = count_fail1 = count_suc2 = count_fail2 = count_suc3 = count_fail3 =
 
 for q in q_values:
     for i in range(0,N):
-        vessel = Ship(D = 20)
+        vessel = Ship(D = 10)
         
         bot1 = Bot1(copy.deepcopy(vessel))
-        if bot1.mission_success(q)[0]:
+        if bot1.mission_success(.8)[0]:
             count_suc1 += 1
         else:
             count_fail1 += 1

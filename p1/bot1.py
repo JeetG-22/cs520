@@ -17,27 +17,22 @@ class Bot1:
         if path is None:
             return False, []
 
-        curr = path[0]
-        path_index = 0
-        curr_val = self.SHIP.grid[curr[0]][curr[1]]
-
         # while the bot is not in a fire cell
-        while curr_val != 3:
-
+        for position in path:
+            # self.SHIP.grid[position[0]][position[1]] = 2
+            # print(self.SHIP)
             # move bot to the next cell
-            curr = path[path_index]
-            curr_val = self.SHIP.grid[curr[0]][curr[1]]
-            path_index += 1
-
-            # if button cell is reached, return True
-            if curr_val == 4:
-                return True, path
-
-            # spread the fire
+            curr_val = self.SHIP.grid[position[0]][position[1]]
+            
+            if curr_val == 3:
+                return False, []
+            
+            # spread the fire after the bot moves
             self.SHIP.spread_fire(flammability)
+            # self.SHIP.grid[position[0]][position[1]] = 1
         
-        # if it hits a fire cell, mission failed
-        return False, []
+        # if loop finishes then bot correctly got to the button
+        return True, []
 
     def get_path(self):
         # Get source node

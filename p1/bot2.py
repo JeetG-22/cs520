@@ -16,7 +16,6 @@ class Bot2:
         
         #loop until bot finds correct path or fails
         while True:
-
             path = self.get_path(bot_pos)
 
             # move bot to the next cell & update the new position on grid for the next path 
