@@ -136,9 +136,10 @@ class Ship:
                         if (0 <= i + dx < self.N) and (0 <= j + dy < self.N):
                             count = count + 1 if self.grid[i + dx][j + dy] == 3 else count
 
-                    prob = 1 - (1 - q)**count
-                    if random.random() < prob:
-                        copy[i][j] = 3  # set on fire
+                    if count > 0:  # won't spread if there's no burning neighbors
+                        prob = 1 - (1 - q)**count
+                        if random.random() < prob:
+                            copy[i][j] = 3  # set on fire
         
         self.grid = copy
                 
