@@ -1,8 +1,9 @@
 import ship
+from queue import PriorityQueue
 
-# Uses BFS to find the shortest path to the button
+# Uses A* to find the shortest path to the button
 # 0 = closed cell, 1 = open cell, 2 = bot cell, 3 = fire cell, 4 = button cell
-class Bot3:
+class Bot4:
 
     def __init__(self, SHIP):
         self.SHIP = SHIP
@@ -47,82 +48,41 @@ class Bot3:
 
 
     def get_path(self, curr_pos, avoid_adj_fire):
-        # print(avoid_adj_fire)
-        # print(self.SHIP)
-        # Get source node
-        self.bot_start = curr_pos
+
+        # Get initial positions
+        self.bot_start = curr_pos(2)
+        button_start = curr_pos(4)
+        fire_start = curr_pos(3)
         
-        # Add it to the queue
-        self.queue = []
-        self.queue.append(self.bot_start)
-
-        # Visited set
-        visited = set()
-        visited.add(self.bot_start)
-
-        # Keep track of parent nodes/path
-        parent = {self.bot_start: None}
-
-        while self.queue:
-            cell = self.queue.pop(0)
-
-            # Check if we reached the button
-            if self.SHIP.grid[cell[0]][cell[1]] == 4:
-                return self.get_solution(parent, cell)
-
-            # Get all neighbors
-            for (dx, dy) in self.SHIP.neighbour_directions:
-                
-                neighbor = (cell[0] + dx, cell[1] + dy)
-
-                # Check that it's not in the visited set
-                if neighbor in visited:
-                    continue
-
-                # Check that its in the grid
-                if not (0 <= neighbor[0] < self.SHIP.N and 0 <= neighbor[1] < self.SHIP.N):
-                    continue
-            
-                # Check that it's not a a fire cell or closed cell
-                if self.SHIP.grid[neighbor[0]][neighbor[1]] != 3 and self.SHIP.grid[neighbor[0]][neighbor[1]] != 0:
-                    
-                    if(avoid_adj_fire and self.has_adj_fires(neighbor)):
-                        continue
-
-                    # Add it to the queue
-                    self.queue.append(neighbor)
-                    visited.add(neighbor)
-                    parent[neighbor] = cell
-
-        return None  # No solution
+        # Create structures
+        queue = PriorityQueue()
+        est_cost = {}  # estimated total cost
+        start_cost = {}  # stores the cost of each node from the beginning position
         
+        # Initialize
+        start_cost[self.bot_start] = 0
+        est_cost[self.bot_start] = heuristic(self.bot_start, button_start, fire_start)
 
-    #returns true if cell has neighbors that are burning
+
+
+    # Returns true if cell has neighbors that are burning
     def has_adj_fires(self, neighbor):
+
         for (dx, dy) in self.SHIP.neighbour_directions:
             adj_neighbor = (neighbor[0] + dx, neighbor[1] + dy)
             if 0 <= adj_neighbor[0] < self.SHIP.N and 0 <= adj_neighbor[1] < self.SHIP.N:
                 if self.SHIP.grid[adj_neighbor[0]][adj_neighbor[1]] == 3:
                     return True
+                
         return False
     
-    def get_position(self):
+    # Returns coordinates of the indicated value
+    def get_position(self, target):
         pos = (0,0)
-        # Find initial position of bot
+
+        # Find initial position of target
         for i in range(self.SHIP.N):
             for j in range(self.SHIP.N):
-                if self.SHIP.grid[i][j] == 2:
+                if self.SHIP.grid[i][j] == target:
                     pos = (i,j)
                     return pos
-    
-    # Returns the solution path once BFS finds the button
-    def get_solution(self, parent, end):
-
-        path = []
-
-        while end is not None:
-            path.append(end)
-            end = parent[end]
-
-        path.reverse()
-        return path
