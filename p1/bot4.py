@@ -1,6 +1,7 @@
 import ship
-from queue import PriorityQueue
+from heapq import heappop, heappush
 from collections import deque
+import sys
 
 # Uses A* to find the shortest path to the button
 # 0 = closed cell, 1 = open cell, 2 = bot cell, 3 = fire cell, 4 = button cell
@@ -17,17 +18,18 @@ class Bot4:
         button_start = self.get_position(4)
         
         # Create structures
-        queue = PriorityQueue()
+        queue = []
         est_cost = {}  # estimated total cost
         start_cost = {}  # stores the cost of each node from the beginning position
         
         # Initialize
+        self.compute_fire_distances()
         start_cost[bot_start] = 0
         est_cost[bot_start] = self.heuristic(bot_start, button_start)
-        queue.put((est_cost[bot_start], bot_start))
+        heappush(queue, (est_cost[bot_start], bot_start))
 
         while queue:
-            _, curr = queue.get()  # gets new bot position with minimum priority
+            _, curr = heappop(queue)  # gets new bot position with minimum priority
 
             if self.SHIP.grid[curr[0]][curr[1]] == 4:  # reached button
                 return True
@@ -37,22 +39,56 @@ class Bot4:
             if self.SHIP.grid[curr[0]][curr[1]] == 3:  # bot caught on fire
                 return False
             
+            self.compute_fire_distances()  # precompute each cell's distance to the fire
+            
             # Get all neighbors
             for (dx, dy) in self.SHIP.neighbour_directions:
-    
                 neighbor = (curr[0] + dx, curr[1] + dy)
 
-                temp = start_cost[curr] + 1
+                # Evaluate only if it's not a fire or closed cell
+                if self.SHIP.grid[neighbor[0]][neighbor[1]] not in [0, 3]:
 
-                if (neighbor in start_cost and temp < start_cost[neighbor]):
-                    start_cost[neighbor] = temp
-                    est_cost[neighbor] = start_cost[neighbor] + self.heuristic(neighbor, button_start)
+                    temp = start_cost[curr] + 1
 
-                    if neighbor not in queue:
-                        queue.put((est_cost[neighbor], neighbor))  # explore stronger options first
+                    if (neighbor not in start_cost or temp < start_cost[neighbor]):
+                        start_cost[neighbor] = temp
+                        est_cost[neighbor] = start_cost[neighbor] + self.heuristic(neighbor, button_start)
+
+                        if neighbor not in queue:
+                            heappush(queue, (est_cost[neighbor], neighbor))  # explore stronger options first
         
         return False
     
+
+    # run each time spread_fire is called to track the distance for each cell to closest fire
+    def compute_fire_distances(self):
+        fire_dist = [[float('inf')] * self.SHIP.N for _ in range(self.SHIP.N)]
+        queue = deque()
+
+        # Get all fire cells
+        for x in range(self.SHIP.N):
+            for y in range(self.SHIP.N):
+
+                if self.SHIP.grid[x][y] == 3:
+                    queue.append((x, y, 0))  # (row, col, dist to nearest fire)
+                    fire_dist[x][y] = 0
+
+        # BFS for each cell
+        while queue:
+            x, y, dist = queue.popleft()
+
+            # for all neighbors
+            for dx, dy in self.SHIP.neighbour_directions:
+                nx, ny = x + dx, y + dy
+
+                # if it's an open cell
+                if 0 <= nx < self.SHIP.N and 0 <= ny < self.SHIP.N and self.SHIP.grid[nx][ny] in [1, 2, 4]:
+                    if dist + 1 < fire_dist[nx][ny]:
+                        fire_dist[nx][ny] = dist + 1  # increment the fire distance
+                        queue.append((nx, ny, dist + 1))
+
+        self.fire_distance_map = fire_dist
+
 
     # returns distance of the closest fire to the cell using BFS
     def closest_fire(self, cell):   
@@ -85,10 +121,15 @@ class Bot4:
     #  Scores possible movement for the bot depending on fire positions and button position
     def heuristic(self, bot_pos, button_pos):
         button_dist = abs(bot_pos[0] - button_pos[0]) + abs(bot_pos[1] - button_pos[1])
-        closest_fire_dist = self.closest_fire(bot_pos)
-        
+        try:
+            closest_fire_dist = self.fire_distance_map[bot_pos[0]][bot_pos[1]]
+        except Exception as e:
+            print(button_pos)
+            print(self.fire_distance_map)
+            print(self.SHIP.grid)
+            sys.exit()
         return button_dist - closest_fire_dist
-    
+
 
     # Returns coordinates of the indicated value
     def get_position(self, target):
