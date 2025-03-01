@@ -45,8 +45,8 @@ class Bot4:
             for (dx, dy) in self.SHIP.neighbour_directions:
                 neighbor = (curr[0] + dx, curr[1] + dy)
 
-                # Evaluate only if it's not a fire or closed cell
-                if self.SHIP.grid[neighbor[0]][neighbor[1]] not in [0, 3]:
+                # Evaluate only if it's not a fire or closed cell and it's in the grid
+                if 0 <= neighbor[0] < self.SHIP.N and 0 <= neighbor[1] < self.SHIP.N and self.SHIP.grid[neighbor[0]][neighbor[1]] not in [0, 3]:
 
                     temp = start_cost[curr] + 1
 
