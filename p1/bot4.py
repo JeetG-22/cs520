@@ -1,5 +1,6 @@
 import ship
 from queue import PriorityQueue
+from collections import deque
 
 # Uses A* to find the shortest path to the button
 # 0 = closed cell, 1 = open cell, 2 = bot cell, 3 = fire cell, 4 = button cell
@@ -9,12 +10,12 @@ class Bot4:
         self.SHIP = SHIP
 
     # A Priori algorithm, returns true if bot successfully gets to button
-    def mission_success(self, curr_pos, flammability):
+    def mission_success(self, flammability):
 
         # Get initial positions
-        bot_start = curr_pos(2)
-        button_start = curr_pos(4)
-        fire_start = curr_pos(3)
+        bot_start = self.get_position(2)
+        button_start = self.get_position(4)
+        fire_start = self.get_position(3)
         
         # Create structures
         queue = PriorityQueue()
@@ -23,7 +24,7 @@ class Bot4:
         
         # Initialize
         start_cost[self.bot_start] = 0
-        est_cost[self.bot_start] = heuristic(bot_start, button_start)
+        est_cost[self.bot_start] = self.heuristic(bot_start, button_start)
         queue.put((est_cost[self.bot_start], bot_start))
 
         while queue:
@@ -46,28 +47,50 @@ class Bot4:
 
                 if (neighbor in start_cost and temp < start_cost[neighbor]):
                     start_cost[neighbor] = temp
-                    est_cost[neighbor] = start_cost[neighbor] + heuristic(neighbor, button_start)
+                    est_cost[neighbor] = start_cost[neighbor] + self.heuristic(neighbor, button_start)
 
                     if neighbor not in queue:
                         queue.put((est_cost[neighbor], neighbor))  # explore stronger options first
         
         return False
     
+
+    # returns distance of the closest fire to the cell using BFS
+    def closest_fire(self, cell):   
+
+        # Stores the cell and its distance
+        queue = deque([(cell, 0)])
+        visited = set()
+        visited.add(cell)
+
+        while queue:
+            (x, y), dist = queue.popleft()  # Pop the cell and its distance
+
+            # Check if we reached the fire
+            if self.SHIP.grid[x][y] == 3:
+                return dist
+
+            # Explore all neighbors
+            for dx, dy in self.SHIP.neighbour_directions:
+                neighbor = (x + dx, y + dy)
+
+                # Check bounds
+                if 0 <= neighbor[0] < self.SHIP.N and 0 <= neighbor[1] < self.SHIP.N:
+                    if neighbor not in visited:
+                        visited.add(neighbor)
+                        queue.append((neighbor, dist + 1))  # increase distance
+
+        return float('inf')  # no fire?? shouldn't return this anyway
+
+
+    #  Scores possible movement for the bot depending on fire positions and button position
     def heuristic(self, bot_pos, button_pos):
-        pass
-
-
-    # Returns true if cell has neighbors that are burning
-    def has_adj_fires(self, neighbor):
-
-        for (dx, dy) in self.SHIP.neighbour_directions:
-            adj_neighbor = (neighbor[0] + dx, neighbor[1] + dy)
-            if 0 <= adj_neighbor[0] < self.SHIP.N and 0 <= adj_neighbor[1] < self.SHIP.N:
-                if self.SHIP.grid[adj_neighbor[0]][adj_neighbor[1]] == 3:
-                    return True
-                
-        return False
+        button_dist = abs(bot_pos[0] - button_pos[0]) + abs(bot_pos[1] - button_pos[1])
+        closest_fire_dist = self.closest_fire(bot_pos)
+        
+        return button_dist - closest_fire_dist
     
+
     # Returns coordinates of the indicated value
     def get_position(self, target):
         pos = (0,0)
