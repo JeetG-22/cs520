@@ -129,7 +129,7 @@ class Ship:
         for i in range(self.N):
             for j in range(self.N):
 
-                if self.grid[i][j] == 1:  # if it's an open, nonburning cell
+                if self.grid[i][j] != 0 and self.grid[i][j] != 3:  # if it's a nonburning cell
                     count = 0   # count the number of burning cells
 
                     for (dx, dy) in self.neighbour_directions:

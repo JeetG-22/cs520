@@ -8,49 +8,11 @@ class Bot4:
     def __init__(self, SHIP):
         self.SHIP = SHIP
 
-    # Returns true if the bot successfully gets to the button without
-    # hitting a fire cell in its path.
-    def mission_success(self, flammability):
-        bot_pos = self.get_position()
-        visited_positions = [bot_pos]
-        
-        #loop until bot finds correct path or fails
-        while True:
-            path = self.get_path(bot_pos, avoid_adj_fire=True)
-            
-            #check if there is a path with no open cell burning neighbors
-            if path is None:
-                path = self.get_path(bot_pos, avoid_adj_fire=False)
-            
-            #check if there is a path avoiding currently burning cells
-            if path is None:
-                return False, []
-            
-            # print(path)
-        
-            # move bot to the next cell & update the new position on grid for the next path 
-            next_pos = path[1]
-            bot_pos = next_pos
-            
-            #update new path 
-            visited_positions.append(bot_pos)
-
-            # if button cell is reached, return True
-            if self.SHIP.grid[bot_pos[0]][bot_pos[1]] == 4:
-                return True, visited_positions
-        
-            # spread the fire after bot moves
-            self.SHIP.spread_fire(flammability)
-           
-            # check to see if the new fire spread is on the bot's current position
-            if self.SHIP.grid[bot_pos[0]][bot_pos[1]] == 3:
-                return False, []
-
-
-    def get_path(self, curr_pos, avoid_adj_fire):
+    # A Priori algorithm, returns true if bot successfully gets to button
+    def mission_success(self, curr_pos, flammability):
 
         # Get initial positions
-        self.bot_start = curr_pos(2)
+        bot_start = curr_pos(2)
         button_start = curr_pos(4)
         fire_start = curr_pos(3)
         
@@ -61,8 +23,38 @@ class Bot4:
         
         # Initialize
         start_cost[self.bot_start] = 0
-        est_cost[self.bot_start] = heuristic(self.bot_start, button_start, fire_start)
+        est_cost[self.bot_start] = heuristic(bot_start, button_start)
+        queue.put((est_cost[self.bot_start], bot_start))
 
+        while queue:
+            curr = queue.get()  # gets new bot position with minimum priority
+
+            if self.SHIP.grid[curr[0]][curr[1]] == 4:  # reached button
+                return True
+            
+            self.SHIP.spread_fire(flammability)
+
+            if self.SHIP.grid[curr[0]][curr[1]] == 3:  # bot caught on fire
+                return False
+            
+            # Get all neighbors
+            for (dx, dy) in self.SHIP.neighbour_directions:
+    
+                neighbor = (curr[0] + dx, curr[1] + dy)
+
+                temp = start_cost[curr] + 1
+
+                if (neighbor in start_cost and temp < start_cost[neighbor]):
+                    start_cost[neighbor] = temp
+                    est_cost[neighbor] = start_cost[neighbor] + heuristic(neighbor, button_start)
+
+                    if neighbor not in queue:
+                        queue.put((est_cost[neighbor], neighbor))  # explore stronger options first
+        
+        return False
+    
+    def heuristic(self, bot_pos, button_pos):
+        pass
 
 
     # Returns true if cell has neighbors that are burning
