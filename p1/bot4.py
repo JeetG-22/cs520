@@ -15,7 +15,6 @@ class Bot4:
         # Get initial positions
         bot_start = self.get_position(2)
         button_start = self.get_position(4)
-        fire_start = self.get_position(3)
         
         # Create structures
         queue = PriorityQueue()
@@ -23,12 +22,12 @@ class Bot4:
         start_cost = {}  # stores the cost of each node from the beginning position
         
         # Initialize
-        start_cost[self.bot_start] = 0
-        est_cost[self.bot_start] = self.heuristic(bot_start, button_start)
-        queue.put((est_cost[self.bot_start], bot_start))
+        start_cost[bot_start] = 0
+        est_cost[bot_start] = self.heuristic(bot_start, button_start)
+        queue.put((est_cost[bot_start], bot_start))
 
         while queue:
-            curr = queue.get()  # gets new bot position with minimum priority
+            _, curr = queue.get()  # gets new bot position with minimum priority
 
             if self.SHIP.grid[curr[0]][curr[1]] == 4:  # reached button
                 return True
