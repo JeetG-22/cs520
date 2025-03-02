@@ -41,7 +41,7 @@ class Bot4:
 
         return False
     
-    # Uses A* to find the shortest path while avoiding fire and adjacent fire cells
+    # Uses modified A* to find the shortest path while avoiding fire and adjacent fire cells
     def find_path(self, start, goal, factor, avoid_adjacent_fire = True):
 
         # Initialize structs
@@ -79,11 +79,11 @@ class Bot4:
                         if avoid_adjacent_fire and self.is_adjacent_to_fire(neighbor):
                             continue
                         
-                        # Evaluate the risk of that cell
-                        temp = start_cost[curr]
+                        # Evaluate the risk of that cell catching on fire
+                        temp = start_cost[curr] + 1
                         fire_dist = self.fire_distance_map[neighbor[0]][neighbor[1]]
                         if fire_dist < 3:
-                            temp += 3 - fire_dist
+                            temp += 6 - fire_dist
 
                         # Check if it's the best possible path
                         if neighbor not in start_cost or temp < start_cost[neighbor]:
@@ -110,7 +110,7 @@ class Bot4:
     def heuristic(self, bot_pos, button_pos, factor):  # ignore factor -- used for testing
         button_dist = abs(bot_pos[0] - button_pos[0]) + abs(bot_pos[1] - button_pos[1])
         closest_fire_dist = self.fire_distance_map[bot_pos[0]][bot_pos[1]]
-        return button_dist - closest_fire_dist
+        return button_dist - 5/closest_fire_dist
 
     # run each time spread_fire is called to track the distance for each cell to closest fire
     def compute_fire_distances(self):
