@@ -1,10 +1,12 @@
 from queue import PriorityQueue
+from collections import deque
 
 # 0 = closed cell, 1 = open cell, 2 = bot cell, 3 = fire cell, 4 = button cell
 class Bot4:
 
     def __init__(self, SHIP):
         self.SHIP = SHIP
+        self.fire_distance_map = []
         
     # Returns true if the bot successfully gets to the button without
     # hitting a fire cell in its path.
@@ -13,6 +15,8 @@ class Bot4:
         button_pos = self.get_position(4)
 
         while True:
+            self.compute_fire_distances()
+
             # Find shortest path while avoiding fire and adjacent fire cells if possible
             path = self.find_path(bot_pos, button_pos, avoid_adjacent_fire = True)
 
@@ -71,8 +75,11 @@ class Bot4:
                         if avoid_adjacent_fire and self.is_adjacent_to_fire(neighbor):
                             continue
                         
-                        # Increment the distance
-                        temp = start_cost[curr] + 1
+                        # Evaluate the risk of that cell
+                        temp = start_cost[curr]
+                        fire_dist = self.fire_distance_map[neighbor[0]][neighbor[1]]
+                        if fire_dist < 3:
+                            temp += 5 - fire_dist
 
                         # Check if it's the best possible path
                         if neighbor not in start_cost or temp < start_cost[neighbor]:
@@ -98,37 +105,38 @@ class Bot4:
     # Heuristic is defined by the proximity to fire and the button -- lower score is better
     def heuristic(self, bot_pos, button_pos):
         button_dist = abs(bot_pos[0] - button_pos[0]) + abs(bot_pos[1] - button_pos[1])
-        closest_fire_dist = self.closest_fire(bot_pos)
+        closest_fire_dist = self.fire_distance_map[bot_pos[0]][bot_pos[1]]
         return button_dist - 4/closest_fire_dist  # closeness to the button matters the most
 
 
-    # Gets distance to the closest fire cell using BFS
-    def closest_fire(self, cell):
-        queue = []
-        visited = set()
-        visited.add(cell)
+    # run each time spread_fire is called to track the distance for each cell to closest fire
+    def compute_fire_distances(self):
+        fire_dist = [[float('inf')] * self.SHIP.N for _ in range(self.SHIP.N)]
+        queue = deque()
 
+        # Get all fire cells
+        for x in range(self.SHIP.N):
+            for y in range(self.SHIP.N):
+
+                if self.SHIP.grid[x][y] == 3:
+                    queue.append((x, y, 0))  # (row, col, dist to nearest fire)
+                    fire_dist[x][y] = 0
+
+        # BFS for each cell
         while queue:
-            (x, y), dist = queue.pop(0)
-            
-            # If it's on fire the distance is 0
-            if self.SHIP.grid[x][y] == 3:
-                return dist
+            x, y, dist = queue.popleft()
 
-            # For all neighbors
+            # for all neighbors
             for dx, dy in self.SHIP.neighbour_directions:
-                neighbor = (x + dx, y + dy)
+                nx, ny = x + dx, y + dy
 
-                # If it's inside the grid
-                if 0 <= neighbor[0] < self.SHIP.N and 0 <= neighbor[1] < self.SHIP.N:
+                # if it's an open cell
+                if 0 <= nx < self.SHIP.N and 0 <= ny < self.SHIP.N and self.SHIP.grid[nx][ny] in [1, 2, 4]:
+                    if dist + 1 < fire_dist[nx][ny]:
+                        fire_dist[nx][ny] = dist + 1  # increment the fire distance
+                        queue.append((nx, ny, dist + 1))
 
-                    # If it hasn't been checked yet
-                    if neighbor not in visited:
-                        visited.add(neighbor)
-                        queue.append((neighbor, dist + 1))  # Increment distance
-
-        return float('inf')  # If fire isn't found -- this shouldn't be reached anyway
-
+        self.fire_distance_map = fire_dist
 
     # Checks if a cell is right next to a fire cell, returns True if it is
     def is_adjacent_to_fire(self, cell):
