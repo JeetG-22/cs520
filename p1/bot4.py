@@ -1,143 +1,143 @@
-import ship
-from heapq import heappop, heappush
+from queue import PriorityQueue
 from collections import deque
-import sys
 
-# Uses A* to find the shortest path to the button
 # 0 = closed cell, 1 = open cell, 2 = bot cell, 3 = fire cell, 4 = button cell
 class Bot4:
 
     def __init__(self, SHIP):
         self.SHIP = SHIP
-
-    # A Priori algorithm, returns true if bot successfully gets to button
+        
+    # Returns true if the bot successfully gets to the button without
+    # hitting a fire cell in its path.
     def mission_success(self, flammability):
+        bot_pos = self.get_position(2)
+        button_pos = self.get_position(4)
 
-        # Get initial positions
-        bot_start = self.get_position(2)
-        button_start = self.get_position(4)
-        
-        # Create structures
-        queue = []
-        est_cost = {}  # estimated total cost
-        start_cost = {}  # stores the cost of each node from the beginning position
-        
-        # Initialize
-        self.compute_fire_distances()
-        start_cost[bot_start] = 0
-        est_cost[bot_start] = self.heuristic(bot_start, button_start)
-        heappush(queue, (est_cost[bot_start], bot_start))
+        while True:
+            # Find shortest path while avoiding fire and adjacent fire cells if possible
+            path = self.find_path(bot_pos, button_pos, avoid_adjacent_fire=True)
 
-        while queue:
-            _, curr = heappop(queue)  # gets new bot position with minimum priority
+            if not path:  # If no safe path exists, try again without avoiding adjacent fire
+                path = self.find_path(bot_pos, button_pos, avoid_adjacent_fire=False)
+                if not path:
+                    return False  # No possible path to button
 
-            if self.SHIP.grid[curr[0]][curr[1]] == 4:  # reached button
+            bot_pos = path[1]  # Move to the next step in the path
+
+            # Check if we reached the button
+            if bot_pos == button_pos:
                 return True
             
+            # Spread the fire
             self.SHIP.spread_fire(flammability)
 
-            if self.SHIP.grid[curr[0]][curr[1]] == 3:  # bot caught on fire
+            # If bot steps into fire, fail
+            if self.SHIP.grid[bot_pos[0]][bot_pos[1]] == 3:
                 return False
-            
-            self.compute_fire_distances()  # precompute each cell's distance to the fire
-            
-            # Get all neighbors
-            for (dx, dy) in self.SHIP.neighbour_directions:
+
+    def find_path(self, start, goal, avoid_adjacent_fire=True):
+        """Uses A* to find the shortest path while avoiding fire and optionally adjacent fire cells."""
+        queue = PriorityQueue()
+        queue.put((0, start))
+        came_from = {}
+        g_score = {start: 0}
+        f_score = {start: self.heuristic(start, goal)}
+        visited = set()
+
+        while not queue.empty():
+            _, curr = queue.get()
+            if curr in visited:
+                continue
+            visited.add(curr)
+
+            if curr == goal:
+                return self.reconstruct_path(came_from, curr)
+
+            for dx, dy in self.SHIP.neighbour_directions:
                 neighbor = (curr[0] + dx, curr[1] + dy)
 
-                # Evaluate only if it's not a fire or closed cell and it's in the grid
-                if 0 <= neighbor[0] < self.SHIP.N and 0 <= neighbor[1] < self.SHIP.N and self.SHIP.grid[neighbor[0]][neighbor[1]] not in [0, 3]:
+                if not (0 <= neighbor[0] < self.SHIP.N and 0 <= neighbor[1] < self.SHIP.N):
+                    continue  # Out of bounds
+                
+                if self.SHIP.grid[neighbor[0]][neighbor[1]] == 0:  # Wall
+                    continue
+                
+                if self.SHIP.grid[neighbor[0]][neighbor[1]] == 3:  # Fire
+                    continue
+                
+                if avoid_adjacent_fire and self.is_adjacent_to_fire(neighbor):
+                    continue  # Avoid adjacent fire cells if possible
 
-                    temp = start_cost[curr] + 1
+                tentative_g_score = g_score[curr] + 1
+                if tentative_g_score < g_score.get(neighbor, float('inf')):
+                    came_from[neighbor] = curr
+                    g_score[neighbor] = tentative_g_score
+                    f_score[neighbor] = tentative_g_score + self.heuristic(neighbor, goal)
+                    queue.put((f_score[neighbor], neighbor))
 
-                    if (neighbor not in start_cost or temp < start_cost[neighbor]):
-                        start_cost[neighbor] = temp
-                        est_cost[neighbor] = start_cost[neighbor] + self.heuristic(neighbor, button_start)
+        return None  # No path found
 
-                        if neighbor not in queue:
-                            heappush(queue, (est_cost[neighbor], neighbor))  # explore stronger options first
-        
-        return False
+    # Documents path of the algorithm
+    def get_path(self, came_from, curr):
+        path = [curr]
+        while curr in came_from:
+            curr = came_from[curr]
+            path.append(curr)
+        path.reverse()
+        return path
     
 
-    # run each time spread_fire is called to track the distance for each cell to closest fire
-    def compute_fire_distances(self):
-        fire_dist = [[float('inf')] * self.SHIP.N for _ in range(self.SHIP.N)]
-        queue = deque()
-
-        # Get all fire cells
-        for x in range(self.SHIP.N):
-            for y in range(self.SHIP.N):
-
-                if self.SHIP.grid[x][y] == 3:
-                    queue.append((x, y, 0))  # (row, col, dist to nearest fire)
-                    fire_dist[x][y] = 0
-
-        # BFS for each cell
-        while queue:
-            x, y, dist = queue.popleft()
-
-            # for all neighbors
-            for dx, dy in self.SHIP.neighbour_directions:
-                nx, ny = x + dx, y + dy
-
-                # if it's an open cell
-                if 0 <= nx < self.SHIP.N and 0 <= ny < self.SHIP.N and self.SHIP.grid[nx][ny] in [1, 2, 4]:
-                    if dist + 1 < fire_dist[nx][ny]:
-                        fire_dist[nx][ny] = dist + 1  # increment the fire distance
-                        queue.append((nx, ny, dist + 1))
-
-        self.fire_distance_map = fire_dist
+    # Heuristic is defined by the proximity to fire and the button -- lower score is better
+    def heuristic(self, bot_pos, button_pos):
+        button_dist = abs(bot_pos[0] - button_pos[0]) + abs(bot_pos[1] - button_pos[1])
+        closest_fire_dist = self.closest_fire(bot_pos)
+        return button_dist - 4/closest_fire_dist  # closeness to the button matters the most
 
 
-    # returns distance of the closest fire to the cell using BFS
-    def closest_fire(self, cell):   
-
-        # Stores the cell and its distance
-        queue = deque([(cell, 0)])
+    # Gets distance to the closest fire cell using BFS
+    def closest_fire(self, cell):
+        queue = []
         visited = set()
         visited.add(cell)
 
         while queue:
-            (x, y), dist = queue.popleft()  # Pop the cell and its distance
-
-            # Check if we reached the fire
+            (x, y), dist = queue.pop(0)
+            
+            # If it's on fire the distance is 0
             if self.SHIP.grid[x][y] == 3:
                 return dist
 
-            # Explore all neighbors
+            # For all neighbors
             for dx, dy in self.SHIP.neighbour_directions:
                 neighbor = (x + dx, y + dy)
 
-                # Check bounds
+                # If it's inside the grid
                 if 0 <= neighbor[0] < self.SHIP.N and 0 <= neighbor[1] < self.SHIP.N:
+
+                    # If it hasn't been checked yet
                     if neighbor not in visited:
                         visited.add(neighbor)
-                        queue.append((neighbor, dist + 1))  # increase distance
+                        queue.append((neighbor, dist + 1))  # Increment distance
 
-        return float('inf')  # no fire?? shouldn't return this anyway
-
-
-    #  Scores possible movement for the bot depending on fire positions and button position
-    def heuristic(self, bot_pos, button_pos):
-        button_dist = abs(bot_pos[0] - button_pos[0]) + abs(bot_pos[1] - button_pos[1])
-        try:
-            closest_fire_dist = self.fire_distance_map[bot_pos[0]][bot_pos[1]]
-        except Exception as e:
-            print(button_pos)
-            print(self.fire_distance_map)
-            print(self.SHIP.grid)
-            sys.exit()
-        return button_dist - closest_fire_dist
+        return float('inf')  # If fire isn't found -- this shouldn't be reached anyway
 
 
-    # Returns coordinates of the indicated value
+    # Checks if a cell is right next to a fire cell, returns True if it is
+    def is_adjacent_to_fire(self, cell):
+
+        for dx, dy in self.SHIP.neighbour_directions:  # For each neighbor
+            n = (cell[0] + dx, cell[1] + dy)
+
+            if 0 <= n[0] < self.SHIP.N and 0 <= n[1] < self.SHIP.N:  # Inside the ship grid
+                if self.SHIP.grid[n[0]][n[1]] == 3:  # Is it on fire?
+                    return True
+                
+        return False
+
+
+    # Returns coordinates of the given target value
     def get_position(self, target):
-        pos = (0,0)
-
-        # Find initial position of target
         for i in range(self.SHIP.N):
             for j in range(self.SHIP.N):
                 if self.SHIP.grid[i][j] == target:
-                    pos = (i,j)
-                    return pos
+                    return (i, j)
