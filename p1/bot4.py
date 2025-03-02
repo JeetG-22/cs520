@@ -1,5 +1,4 @@
 from queue import PriorityQueue
-from collections import deque
 
 # 0 = closed cell, 1 = open cell, 2 = bot cell, 3 = fire cell, 4 = button cell
 class Bot4:
@@ -15,74 +14,83 @@ class Bot4:
 
         while True:
             # Find shortest path while avoiding fire and adjacent fire cells if possible
-            path = self.find_path(bot_pos, button_pos, avoid_adjacent_fire=True)
+            path = self.find_path(bot_pos, button_pos, avoid_adjacent_fire = True)
 
-            if not path:  # If no safe path exists, try again without avoiding adjacent fire
-                path = self.find_path(bot_pos, button_pos, avoid_adjacent_fire=False)
+            if not path:  # No safe path exists, try again without avoiding adjacent fire
+                path = self.find_path(bot_pos, button_pos, avoid_adjacent_fire = False)
+                
                 if not path:
-                    return False  # No possible path to button
+                    return False 
+                
+            bot_pos = path[1]
 
-            bot_pos = path[1]  # Move to the next step in the path
-
-            # Check if we reached the button
-            if bot_pos == button_pos:
+            if bot_pos == button_pos:  # Reached button
                 return True
             
-            # Spread the fire
             self.SHIP.spread_fire(flammability)
 
-            # If bot steps into fire, fail
+            # If bot catches on fire
             if self.SHIP.grid[bot_pos[0]][bot_pos[1]] == 3:
                 return False
+    
+    # Uses A* to find the shortest path while avoiding fire and adjacent fire cells
+    def find_path(self, start, goal, avoid_adjacent_fire = True):
 
-    def find_path(self, start, goal, avoid_adjacent_fire=True):
-        """Uses A* to find the shortest path while avoiding fire and optionally adjacent fire cells."""
+        # Initialize structs
         queue = PriorityQueue()
+        # Keep track of the parent cell to return the path
+        parent = {}
+        # Keep track of the cost from the start
+        start_cost = {}
+        # Keep track of the estimated total cost
+        est_cost = {}
+
+        # Add start
         queue.put((0, start))
-        came_from = {}
-        g_score = {start: 0}
-        f_score = {start: self.heuristic(start, goal)}
+        start_cost[start] = 0
+        est_cost[start] = self.heuristic(start, goal)
         visited = set()
-
-        while not queue.empty():
+        
+        # Begin A priori
+        while queue:
             _, curr = queue.get()
-            if curr in visited:
-                continue
-            visited.add(curr)
 
-            if curr == goal:
-                return self.reconstruct_path(came_from, curr)
+            if curr not in visited:
+                visited.add(curr)
 
-            for dx, dy in self.SHIP.neighbour_directions:
-                neighbor = (curr[0] + dx, curr[1] + dy)
+                if curr == goal:  # Reached button coordinate
+                    return self.get_path(parent, curr)
 
-                if not (0 <= neighbor[0] < self.SHIP.N and 0 <= neighbor[1] < self.SHIP.N):
-                    continue  # Out of bounds
-                
-                if self.SHIP.grid[neighbor[0]][neighbor[1]] == 0:  # Wall
-                    continue
-                
-                if self.SHIP.grid[neighbor[0]][neighbor[1]] == 3:  # Fire
-                    continue
-                
-                if avoid_adjacent_fire and self.is_adjacent_to_fire(neighbor):
-                    continue  # Avoid adjacent fire cells if possible
+                # For all neighbors
+                for dx, dy in self.SHIP.neighbour_directions:
+                    neighbor = (curr[0] + dx, curr[1] + dy)
 
-                tentative_g_score = g_score[curr] + 1
-                if tentative_g_score < g_score.get(neighbor, float('inf')):
-                    came_from[neighbor] = curr
-                    g_score[neighbor] = tentative_g_score
-                    f_score[neighbor] = tentative_g_score + self.heuristic(neighbor, goal)
-                    queue.put((f_score[neighbor], neighbor))
+                    # If it's in the grid and not a closed or fire cell
+                    if (0 <= neighbor[0] < self.SHIP.N and 0 <= neighbor[1] < self.SHIP.N) and self.SHIP.grid[neighbor[0]][neighbor[1]] not in [0, 3]:
+                        
+                        if avoid_adjacent_fire and self.is_adjacent_to_fire(neighbor):
+                            continue
+                        
+                        # Increment the distance
+                        temp = start_cost[curr] + 1
+
+                        # Check if it's the best possible path
+                        if neighbor not in start_cost or temp < start_cost[neighbor]:
+                            parent[neighbor] = curr
+                            start_cost[neighbor] = temp
+                            est_cost[neighbor] = temp + self.heuristic(neighbor, goal)
+                            queue.put((est_cost[neighbor], neighbor))
 
         return None  # No path found
 
     # Documents path of the algorithm
-    def get_path(self, came_from, curr):
+    def get_path(self, parent_map, curr):
         path = [curr]
-        while curr in came_from:
-            curr = came_from[curr]
+
+        while curr in parent_map:
+            curr = parent_map[curr]
             path.append(curr)
+
         path.reverse()
         return path
     

@@ -55,49 +55,49 @@ print(q_values)
 
 count_suc1 = count_fail1 = count_suc2 = count_fail2 = count_suc3 = count_fail3 = count_suc4 = count_fail4 = 0
 
-for q in q_values:
-    for i in range(0,N):
-        vessel = Ship(D = 20)
+# for q in q_values:
+#     for i in range(0,N):
+#         vessel = Ship(D = 15)
         
-        bot1 = Bot1(copy.deepcopy(vessel))
-        if bot1.mission_success(1)[0]:
-            count_suc1 += 1
-        else:
-            count_fail1 += 1
+#         # bot1 = Bot1(copy.deepcopy(vessel))
+#         # if bot1.mission_success(1)[0]:
+#         #     count_suc1 += 1
+#         # else:
+#         #     count_fail1 += 1
             
-        # bot2 = Bot2(copy.deepcopy(vessel))
-        # if bot2.mission_success(1)[0]:
-        #     count_suc2 += 1
-        # else:
-        #     count_fail2 += 1
+#         # bot2 = Bot2(copy.deepcopy(vessel))
+#         # if bot2.mission_success(1)[0]:
+#         #     count_suc2 += 1
+#         # else:
+#         #     count_fail2 += 1
             
-        bot3 = Bot3(copy.deepcopy(vessel))
-        if bot3.mission_success(1)[0]:
-            count_suc3 += 1
-        else:
-            count_fail3 += 1
+#         # bot3 = Bot3(copy.deepcopy(vessel))
+#         # if bot3.mission_success(1)[0]:
+#         #     count_suc3 += 1
+#         # else:
+#         #     count_fail3 += 1
 
-        bot4 = Bot4(copy.deepcopy(vessel))
-        if bot4.mission_success(1):
-            count_suc4 += 1
-        else:
-            count_fail4 += 1
+#         bot4 = Bot4(copy.deepcopy(vessel))
+#         if bot4.mission_success(1):
+#             count_suc4 += 1
+#         else:
+#             count_fail4 += 1
     
-print("Bot1: ") 
-print("Successes: ", count_suc1)
-print("Failures: ", count_fail1)
+# print("Bot1: ") 
+# print("Successes: ", count_suc1)
+# print("Failures: ", count_fail1)
 
-print("Bot2: ") 
-print("Successes: ", count_suc2)
-print("Failures: ", count_fail2)
+# print("Bot2: ") 
+# print("Successes: ", count_suc2)
+# print("Failures: ", count_fail2)
 
-print("Bot3: ") 
-print("Successes: ", count_suc3)
-print("Failures: ", count_fail3)
+# print("Bot3: ") 
+# print("Successes: ", count_suc3)
+# print("Failures: ", count_fail3)
 
-print("Bot4: ") 
-print("Successes: ", count_suc4)
-print("Failures: ", count_fail4)
+# print("Bot4: ") 
+# print("Successes: ", count_suc4)
+# print("Failures: ", count_fail4)
 
 # count_suc = count_fail = 0
 # for i in range(0,N):
