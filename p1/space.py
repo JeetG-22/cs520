@@ -3,6 +3,7 @@ from bot1 import Bot1
 from bot2 import Bot2
 from bot3 import Bot3
 from bot4 import Bot4
+import matplotlib.pyplot as plt
 import copy
 
 # vessel = Ship(D = 10)
@@ -94,11 +95,48 @@ for q in q_values:  # for each q
     bot3_q_successes.append(count_suc3)
     bot4_q_successes.append(count_suc4)
 
-
 print(bot1_q_successes)
 print(bot2_q_successes)
 print(bot3_q_successes)
 print(bot4_q_successes)
+
+# Create plots
+plt.figure(figsize = (12, 8))
+
+# Bot1 plot
+plt.subplot(2, 2, 1)
+plt.plot(q_values, bot1_q_successes)
+plt.ylim(0, 100)
+plt.xlabel('Q Values')
+plt.ylabel('Bot1 Number Successes')
+plt.title('Bot1 Success Rate')
+
+# Bot2 plot
+plt.subplot(2, 2, 2)
+plt.plot(q_values, bot2_q_successes)
+plt.ylim(0, 100)
+plt.xlabel('Q Values')
+plt.ylabel('Bot2 Number Successes')
+plt.title('Bot2 Success Rate')
+
+# Bot3 plot
+plt.subplot(2, 2, 3)
+plt.plot(q_values, bot3_q_successes)
+plt.ylim(0, 100)
+plt.xlabel('Q Values')
+plt.ylabel('Bot3 Number Successes')
+plt.title('Bot3 Success Rate')
+
+# Bot4 plot
+plt.subplot(2, 2, 4)
+plt.plot(q_values, bot4_q_successes)
+plt.ylim(0, 100)
+plt.xlabel('Q Values')
+plt.ylabel('Bot4 Number Successes')
+plt.title('Bot4 Success Rate')
+
+plt.tight_layout()
+plt.show()
 
 # # Used to test best coefficients for heuristic
 # for factor in range(1,12):
