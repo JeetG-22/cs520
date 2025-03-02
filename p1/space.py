@@ -5,138 +5,104 @@ from bot3 import Bot3
 from bot4 import Bot4
 import matplotlib.pyplot as plt
 import copy
+import numpy as np
+from test_winnability import TestWinnability
 
-# vessel = Ship(D = 10)
-# vessel.place_entities()
-# print("Original Vessel:\n\n")
-# print(vessel)
-
-# print("\nBot1")
-# bot1 = Bot1(vessel)
-# print(bot1.mission_success(.1))
-# print(bot1.get_path())
-
-# print("\n\nVessel After:")
-# print(vessel)
-
-# vessel2 = Ship(D = 10)
-# vessel2.place_entities()
-
-# print("\n\nOriginal Vessel:\n\n")
-# print(vessel2)
-
-# print("\nBot2")
-# bot2 = Bot2(vessel2)
-# print(bot2.mission_success(0.3))
-
-# print("\n\nVessel After:")
-# print(vessel2)
-
-# vessel3 = Ship(D = 7)
-# vessel3.place_entities()
-
-# print("\n\nOriginal Vessel:\n\n")
-# print(vessel3)
-
-# print("\nBot3")
-# bot3 = Bot3(vessel3)
-# print(bot3.mission_success(0.3))
-
-# print("\n\nVessel After:")
-# print(vessel3)
-
-N = 10 
+# N = 10 
 q_values = [round(i * .05, 2) for i in range (1, 21)]
-bot1_q_successes = []
-bot2_q_successes = []
-bot3_q_successes = []
-bot4_q_successes = []
+# bot1_q_successes = []
+# bot2_q_successes = []
+# bot3_q_successes = []
+# bot4_q_successes = []
 
-print(q_values)
+# count_suc1 = count_fail1 = count_suc2 = count_fail2 = count_suc3 = count_fail3 = count_suc4 = count_fail4 = 0
 
-count_suc1 = count_fail1 = count_suc2 = count_fail2 = count_suc3 = count_fail3 = count_suc4 = count_fail4 = 0
+# # Question 3
+# for q in q_values:  # for each q
+#     count_suc1 = 0
+#     count_suc2 = 0
+#     count_suc3 = 0
+#     count_suc4 = 0
 
-# Question 3
-for q in q_values:  # for each q
-    count_suc1 = 0
-    count_suc2 = 0
-    count_suc3 = 0
-    count_suc4 = 0
+#     for i in range(0, 100):  # for 100 trials
+#         vessel = Ship(D = 40)
 
-    for i in range(0, 100):  # for 100 trials
-        vessel = Ship(D = 15)
-
-        bot1 = Bot1(copy.deepcopy(vessel))
-        if bot1.mission_success(1)[0]:
-            count_suc1 += 1
-        else:
-            count_fail1 += 1
+#         bot1 = Bot1(copy.deepcopy(vessel))
+#         if bot1.mission_success(1)[0]:
+#             count_suc1 += 1
+#         else:
+#             count_fail1 += 1
             
-        bot2 = Bot2(copy.deepcopy(vessel))
-        if bot2.mission_success(1)[0]:
-            count_suc2 += 1
-        else:
-            count_fail2 += 1
+#         bot2 = Bot2(copy.deepcopy(vessel))
+#         if bot2.mission_success(1)[0]:
+#             count_suc2 += 1
+#         else:
+#             count_fail2 += 1
             
-        bot3 = Bot3(copy.deepcopy(vessel))
-        if bot3.mission_success(1)[0]:
-            count_suc3 += 1
-        else:
-            count_fail3 += 1
+#         bot3 = Bot3(copy.deepcopy(vessel))
+#         if bot3.mission_success(1)[0]:
+#             count_suc3 += 1
+#         else:
+#             count_fail3 += 1
         
-        bot4 = Bot4(copy.deepcopy(vessel))
-        if bot4.mission_success(1, 1):
-            count_suc4 += 1
-        else:
-            count_fail4 += 1
+#         bot4 = Bot4(copy.deepcopy(vessel))
+#         if bot4.mission_success(1, 1):
+#             count_suc4 += 1
+#         else:
+#             count_fail4 += 1
 
-    bot1_q_successes.append(count_suc1)
-    bot2_q_successes.append(count_suc2)
-    bot3_q_successes.append(count_suc3)
-    bot4_q_successes.append(count_suc4)
+#     bot1_q_successes.append(count_suc1)
+#     bot2_q_successes.append(count_suc2)
+#     bot3_q_successes.append(count_suc3)
+#     bot4_q_successes.append(count_suc4)
 
-print(bot1_q_successes)
-print(bot2_q_successes)
-print(bot3_q_successes)
-print(bot4_q_successes)
+# # Create plots
+# plt.figure(figsize = (10, 6))
 
-# Create plots
-plt.figure(figsize = (12, 8))
+# # Plot success rates for each bot with different colors and markers
+# plt.plot(q_values, bot1_q_successes, label = "Bot1")
+# plt.plot(q_values, bot2_q_successes, label = "Bot2")
+# plt.plot(q_values, bot3_q_successes, label = "Bot3")
+# plt.plot(q_values, bot4_q_successes, label = "Bot4")
 
-# Bot1 plot
-plt.subplot(2, 2, 1)
-plt.plot(q_values, bot1_q_successes)
-plt.ylim(0, 100)
-plt.xlabel('Q Values')
-plt.ylabel('Bot1 Number Successes')
-plt.title('Bot1 Success Rate')
+# # Set y-axis limit
+# plt.ylim(0, 100)
 
-# Bot2 plot
-plt.subplot(2, 2, 2)
-plt.plot(q_values, bot2_q_successes)
-plt.ylim(0, 100)
-plt.xlabel('Q Values')
-plt.ylabel('Bot2 Number Successes')
-plt.title('Bot2 Success Rate')
+# # Labels and title
+# plt.xlabel('q values')
+# plt.ylabel('Successes out of 100 Trials')
+# plt.title('Success Rates of Bots')
 
-# Bot3 plot
-plt.subplot(2, 2, 3)
-plt.plot(q_values, bot3_q_successes)
-plt.ylim(0, 100)
-plt.xlabel('Q Values')
-plt.ylabel('Bot3 Number Successes')
-plt.title('Bot3 Success Rate')
+# # Add legend
+# plt.legend()
 
-# Bot4 plot
-plt.subplot(2, 2, 4)
-plt.plot(q_values, bot4_q_successes)
-plt.ylim(0, 100)
-plt.xlabel('Q Values')
-plt.ylabel('Bot4 Number Successes')
-plt.title('Bot4 Success Rate')
+# # Show plot
+# plt.show()
 
-plt.tight_layout()
+
+# Question 4
+# Run simulations for different values of q
+num_trials = 100  # Number of simulations per q
+winnable_frequencies = []
+vessel = Ship(D = 40)
+
+for q in q_values:
+    winnable_count = 0
+    for _ in range(num_trials):
+        sim = TestWinnability(copy.deepcopy(vessel), q)
+        if sim.is_winnable():
+            winnable_count += 1
+    winnable_frequencies.append(winnable_count / num_trials)
+
+# Plot results
+plt.figure(figsize=(8, 5))
+plt.plot(q_values, winnable_frequencies, marker='o', linestyle='-')
+plt.xlabel("Flammability (q)")
+plt.ylabel("Probability of Winnability")
+plt.title("Winnability of Simulation as a Function of Fire Spread Probability")
+plt.grid()
 plt.show()
+
 
 # # Used to test best coefficients for heuristic
 # for factor in range(1,12):
