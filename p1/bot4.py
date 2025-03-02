@@ -10,7 +10,7 @@ class Bot4:
         
     # Returns true if the bot successfully gets to the button without
     # hitting a fire cell in its path.
-    def mission_success(self, flammability):
+    def mission_success(self, flammability, factor):
 
         # Get initial positions of the bot and button on the grid
         bot_pos = self.get_position(2)
@@ -24,10 +24,10 @@ class Bot4:
             self.compute_fire_distances()
 
             # Find shortest path while avoiding fire and adjacent fire cells if possible
-            path = self.find_path(bot_pos, button_pos, avoid_adjacent_fire = True)
+            path = self.find_path(bot_pos, button_pos, factor, avoid_adjacent_fire = True)
 
             if not path:  # No safe path exists, try again without avoiding adjacent fire
-                path = self.find_path(bot_pos, button_pos, avoid_adjacent_fire = False)
+                path = self.find_path(bot_pos, button_pos, factor, avoid_adjacent_fire = False)
 
                 if not path:
                     return False 
@@ -42,7 +42,7 @@ class Bot4:
         return False
     
     # Uses A* to find the shortest path while avoiding fire and adjacent fire cells
-    def find_path(self, start, goal, avoid_adjacent_fire = True):
+    def find_path(self, start, goal, factor, avoid_adjacent_fire = True):
 
         # Initialize structs
         queue = PriorityQueue()
@@ -56,7 +56,7 @@ class Bot4:
         # Add start
         queue.put((0, start))
         start_cost[start] = 0
-        est_cost[start] = self.heuristic(start, goal)
+        est_cost[start] = self.heuristic(start, goal, factor)
         visited = set()
 
         # Begin A priori
@@ -89,7 +89,7 @@ class Bot4:
                         if neighbor not in start_cost or temp < start_cost[neighbor]:
                             parent[neighbor] = curr
                             start_cost[neighbor] = temp
-                            est_cost[neighbor] = temp + self.heuristic(neighbor, goal)
+                            est_cost[neighbor] = temp + self.heuristic(neighbor, goal, factor)
                             queue.put((est_cost[neighbor], neighbor))
 
         return None  # No path found
@@ -107,11 +107,10 @@ class Bot4:
     
 
     # Heuristic is defined by the proximity to fire and the button -- lower score is better
-    def heuristic(self, bot_pos, button_pos):
+    def heuristic(self, bot_pos, button_pos, factor):  # ignore factor -- used for testing
         button_dist = abs(bot_pos[0] - button_pos[0]) + abs(bot_pos[1] - button_pos[1])
         closest_fire_dist = self.fire_distance_map[bot_pos[0]][bot_pos[1]]
-        return button_dist - 4/closest_fire_dist  # closeness to the button matters the most
-
+        return button_dist - closest_fire_dist
 
     # run each time spread_fire is called to track the distance for each cell to closest fire
     def compute_fire_distances(self):
