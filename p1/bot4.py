@@ -11,10 +11,16 @@ class Bot4:
     # Returns true if the bot successfully gets to the button without
     # hitting a fire cell in its path.
     def mission_success(self, flammability):
+
+        # Get initial positions of the bot and button on the grid
         bot_pos = self.get_position(2)
         button_pos = self.get_position(4)
 
-        while True:
+        # While the bot does not catch on fire
+        while self.SHIP.grid[bot_pos[0]][bot_pos[1]] != 3:
+
+            # Updates the fire_distance_map so that each cell on the map stores
+            # how close that corresponding cell is to a fire cell on self.SHIP.grid
             self.compute_fire_distances()
 
             # Find shortest path while avoiding fire and adjacent fire cells if possible
@@ -22,7 +28,7 @@ class Bot4:
 
             if not path:  # No safe path exists, try again without avoiding adjacent fire
                 path = self.find_path(bot_pos, button_pos, avoid_adjacent_fire = False)
-                
+
                 if not path:
                     return False 
                 
@@ -33,9 +39,7 @@ class Bot4:
             
             self.SHIP.spread_fire(flammability)
 
-            # If bot catches on fire
-            if self.SHIP.grid[bot_pos[0]][bot_pos[1]] == 3:
-                return False
+        return False
     
     # Uses A* to find the shortest path while avoiding fire and adjacent fire cells
     def find_path(self, start, goal, avoid_adjacent_fire = True):
@@ -54,9 +58,9 @@ class Bot4:
         start_cost[start] = 0
         est_cost[start] = self.heuristic(start, goal)
         visited = set()
-        
+
         # Begin A priori
-        while queue:
+        while queue.qsize() > 0:
             _, curr = queue.get()
 
             if curr not in visited:
@@ -79,7 +83,7 @@ class Bot4:
                         temp = start_cost[curr]
                         fire_dist = self.fire_distance_map[neighbor[0]][neighbor[1]]
                         if fire_dist < 3:
-                            temp += 5 - fire_dist
+                            temp += 3 - fire_dist
 
                         # Check if it's the best possible path
                         if neighbor not in start_cost or temp < start_cost[neighbor]:

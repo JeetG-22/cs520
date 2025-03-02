@@ -89,8 +89,7 @@ class Ship:
             closed_random_neighbour = deadend_open_cells[coords].pop(random.randint(0, len(deadend_open_cells[coords]) - 1))
             self.grid[closed_random_neighbour[0]][closed_random_neighbour[1]] = 1
 
-            # TODO: Jeet - is this solution correct? Dynamically updates the count of open neighbors
-            # print(closed_random_neighbour)
+            # Dynamically updates the count of open neighbors
             sum = 0
             for (i, j) in self.neighbour_directions: 
                 if ((closed_random_neighbour[0] + i, closed_random_neighbour[1] + j) in self.open_cells):
