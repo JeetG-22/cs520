@@ -1,3 +1,6 @@
+# Running the Program
+The program should be run from space.py. Answers to questions given in the writeup are contained in this file.
+
 ### Create Python Virtual Environment
 
 In this project, we utilized Python virtual enviroments to keep pip packages consistent across all machines, while avoiding externally managed environment errors.

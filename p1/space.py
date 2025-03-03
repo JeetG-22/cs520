@@ -11,14 +11,14 @@ import numpy as np
 import random
 from winnability import Winnability
 
-# N = 100 #number of trials
+N = 100 # number of trials
 q_values = [round(i * .05, 2) for i in range (1, 21)]
-# bot1_q_successes = []
-# bot2_q_successes = []
-# bot3_q_successes = []
-# bot4_q_successes = []
+bot1_q_successes = []
+bot2_q_successes = []
+bot3_q_successes = []
+bot4_q_successes = []
 
-# count_suc1 = count_fail1 = count_suc2 = count_fail2 = count_suc3 = count_fail3 = count_suc4 = count_fail4 = 0
+count_suc1 = count_fail1 = count_suc2 = count_fail2 = count_suc3 = count_fail3 = count_suc4 = count_fail4 = 0
 
 # # Question 3
 # for q in q_values:  # for each q
@@ -109,16 +109,27 @@ for q in q_values:
         
         #create the same seed for each bot in order to make the sims deterministic
         random.seed(seed_value)
+
         bot1 = Bot1(copy.deepcopy(vessel))
         if bot1.mission_success(q)[0]:
             bot1_wins += 1
             success = True
         random.seed(seed_value)
+        if bot1.mission_success(q)[0]:
+            count_suc1 += 1
+        else:
+            count_fail1 += 1
+            
         bot2 = Bot2(copy.deepcopy(vessel))
         if bot2.mission_success(q)[0]:
             bot2_wins += 1
             success = True
         random.seed(seed_value)
+        if bot2.mission_success(q)[0]:
+            count_suc2 += 1
+        else:
+            count_fail2 += 1
+            
         bot3 = Bot3(copy.deepcopy(vessel))
         if bot3.mission_success(q)[0]:
             bot3_wins += 1
@@ -134,6 +145,20 @@ for q in q_values:
             continue
         
         print("Q:" + str(q))
+#         print("Q:" + str(q))
+#         # print("Bot1: " + str(bot1.get_timestep_count()) + " | " + str(bot1.get_visited_positions()))
+#         # print(bot1.SHIP)
+#         # print()
+#         # print("Bot2: " + str(bot2.get_timestep_count()) + " | " + str(bot2.get_visited_positions()))
+#         # print(bot2.SHIP)
+#         # print()
+#         # print("Bot3: " + str(bot3.get_timestep_count()) + " | " + str(bot3.get_visited_positions()))
+#         # print(bot3.SHIP)
+#         # print()
+#         # print("Bot4: " + str(bot4.get_timestep_count()) + " | " + str(bot4.get_visited_positions()))
+#         # print(bot4.SHIP)
+#         # print()
+#         # print("\n\n")
         
         #find the bot that went the furthest before failing 
         max_timestep = len(bot1.get_visited_positions())
@@ -256,21 +281,21 @@ plt.show()
 
 
 
-# # Used to test best coefficients for heuristic
-# for factor in range(1,12):
-#     count_suc4 = 0
-#     count_fail4 = 0
+# # # Used to test best coefficients for heuristic
+# # for factor in range(1,12):
+# #     count_suc4 = 0
+# #     count_fail4 = 0
     
-#     for i in range(0, 100):
+# #     for i in range(0, 100):
 
-#         vessel = Ship(D = 15)
-#         bot4 = Bot4(copy.deepcopy(vessel))
+# #         vessel = Ship(D = 15)
+# #         bot4 = Bot4(copy.deepcopy(vessel))
 
-#         if bot4.mission_success(1, factor):
-#             count_suc4 += 1
-#         else:
-#             count_fail4 += 1
+# #         if bot4.mission_success(1, factor):
+# #             count_suc4 += 1
+# #         else:
+# #             count_fail4 += 1
 
-#     print(f"Bot4: {factor}") 
-#     print("Successes: ", count_suc4)
-#     print("Failures: ", count_fail4)
+# #     print(f"Bot4: {factor}") 
+# #     print("Successes: ", count_suc4)
+# #     print("Failures: ", count_fail4)

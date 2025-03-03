@@ -128,7 +128,7 @@ class Ship:
         for i in range(self.N):
             for j in range(self.N):
 
-                if self.grid[i][j] not in [0, 3]:  # if it's a nonburning cell
+                if self.grid[i][j] not in [0, 3]:  # if it's a nonburning, open cell. Note: bot and button can catch on fire
                     count = 0   # count the number of burning cells
 
                     for (dx, dy) in self.neighbour_directions:
