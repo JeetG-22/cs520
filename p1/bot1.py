@@ -11,28 +11,26 @@ class Bot1:
     # Returns true if the bot successfully gets to the button without
     # hitting a fire cell in its path.
     def mission_success(self, flammability):
-        
+        self.visited_positions = []
         path = self.get_path()
         
         if path is None:
-            return False, []
+            return False, self.visited_positions
 
         # while the bot is not in a fire cell
         for position in path:
-            # self.SHIP.grid[position[0]][position[1]] = 2
-            # print(self.SHIP)
             # move bot to the next cell
             curr_val = self.SHIP.grid[position[0]][position[1]]
+            self.visited_positions.append(position)
             
             if curr_val == 3:
-                return False, []
+                return False, self.visited_positions
             
             # spread the fire after the bot moves
             self.SHIP.spread_fire(flammability)
-            # self.SHIP.grid[position[0]][position[1]] = 1
         
         # if loop finishes then bot correctly got to the button
-        return True, []
+        return True, self.visited_positions
 
     def get_path(self):
         # Get source node
@@ -87,6 +85,9 @@ class Bot1:
                     pos = (i, j)
                     return pos
 
+    
+    def get_visited_positions(self):
+        return self.visited_positions
     
     # Returns the solution path once BFS finds the button
     def get_solution(self, parent, end):

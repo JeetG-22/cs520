@@ -15,6 +15,8 @@ class Bot4:
         # Get initial positions of the bot and button on the grid
         bot_pos = self.get_position(2)
         button_pos = self.get_position(4)
+        self.visited_positions = [bot_pos]
+        
 
         # While the bot does not catch on fire
         while self.SHIP.grid[bot_pos[0]][bot_pos[1]] != 3:
@@ -30,16 +32,18 @@ class Bot4:
                 path = self.find_path(bot_pos, button_pos, factor, avoid_adjacent_fire = False)
 
                 if not path:
-                    return False 
+                    return False, self.visited_positions 
                 
             bot_pos = path[1]
+            self.visited_positions.append(bot_pos)
 
             if bot_pos == button_pos:  # Reached button
-                return True
+                return True, self.visited_positions
             
             self.SHIP.spread_fire(flammability)
+            
 
-        return False
+        return False, self.visited_positions
     
     # Uses modified A* to find the shortest path while avoiding fire and adjacent fire cells
     def find_path(self, start, goal, factor, avoid_adjacent_fire = True):
@@ -160,3 +164,7 @@ class Bot4:
             for j in range(self.SHIP.N):
                 if self.SHIP.grid[i][j] == target:
                     return (i, j)
+
+    
+    def get_visited_positions(self):
+        return self.visited_positions
