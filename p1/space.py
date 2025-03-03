@@ -84,50 +84,56 @@ q_values = [round(i * .05, 2) for i in range (1, 21)]
 # plt.show()
 
 
-# Question 4
+# Question 4 & 5
 # Run simulations for different values of q
 winnable_frequencies = []
-num_trials = 25
+num_trials = 100
+
+# Initialize tracking variables
+bot1_winnable_success = []
+bot2_winnable_success = []
+bot3_winnable_success = []
+bot4_winnable_success = []
 
 for q in q_values:
     winnable_count = 0
+    bot1_wins = 0
+    bot2_wins = 0
+    bot3_wins = 0
+    bot4_wins = 0
+    
     for trial in range(num_trials):
         vessel = Ship(D = 40)
+        seed_value = hash((q, trial))
+        success = False
         
         #create the same seed for each bot in order to make the sims deterministic
-        random.seed(trial)
+        random.seed(seed_value)
         bot1 = Bot1(copy.deepcopy(vessel))
-        random.seed(trial)
+        if bot1.mission_success(q)[0]:
+            bot1_wins += 1
+            success = True
+        random.seed(seed_value)
         bot2 = Bot2(copy.deepcopy(vessel))
-        random.seed(trial)
+        if bot2.mission_success(q)[0]:
+            bot2_wins += 1
+            success = True
+        random.seed(seed_value)
         bot3 = Bot3(copy.deepcopy(vessel))
-        random.seed(trial)
+        if bot3.mission_success(q)[0]:
+            bot3_wins += 1
+            success = True
+        random.seed(seed_value)
         bot4 = Bot4(copy.deepcopy(vessel))
-        
-        #if any of the bots succeed then the simulation is winnable
-        success = (bot1.mission_success(q)[0] or 
-                      bot2.mission_success(q)[0] or 
-                      bot3.mission_success(q)[0] or 
-                      bot4.mission_success(q, 1)[0])
+        if bot4.mission_success(q, 1)[0]:
+            bot4_wins += 1
+            success = True
         
         if success:
             winnable_count += 1
             continue
         
         print("Q:" + str(q))
-        # print("Bot1: " + str(bot1.get_timestep_count()) + " | " + str(bot1.get_visited_positions()))
-        # print(bot1.SHIP)
-        # print()
-        # print("Bot2: " + str(bot2.get_timestep_count()) + " | " + str(bot2.get_visited_positions()))
-        # print(bot2.SHIP)
-        # print()
-        # print("Bot3: " + str(bot3.get_timestep_count()) + " | " + str(bot3.get_visited_positions()))
-        # print(bot3.SHIP)
-        # print()
-        # print("Bot4: " + str(bot4.get_timestep_count()) + " | " + str(bot4.get_visited_positions()))
-        # print(bot4.SHIP)
-        # print()
-        # print("\n\n")
         
         #find the bot that went the furthest before failing 
         max_timestep = len(bot1.get_visited_positions())
@@ -136,15 +142,15 @@ for q in q_values:
             if max_timestep < len(bot.get_visited_positions()):
                 max_timestep = len(bot.get_visited_positions())
                 max_bot = bot
-        # print("" + str(max_bot) + " has max length of " + str(max_timestep))
         
-        random.seed(trial)
+        random.seed(seed_value)
         sim = Winnability(vessel, max_bot.SHIP, max_timestep, q)
         viable_solution = sim.is_winnable()
-        if viable_solution: #if the list returned is not empty then it found a viable path 
-            # print("~~~~~~~~~~~~~~~~THERE IS STILL A WINNABLE SOLUTION~~~~~~~~~~~~~~~~")
-            # print(viable_solution)
-            # print(sim.final_ship)
+        if viable_solution and len(viable_solution) <= max_timestep: #if the list returned is not empty then it found a viable path 
+            print("~~~~~~~~~~~~~~~~THERE IS STILL A WINNABLE SOLUTION~~~~~~~~~~~~~~~~")
+            print(viable_solution)
+            print(sim.final_ship)
+            winnable_count += 1
             
            
             # # Define paths for each bot and the "Perfect" path
@@ -190,15 +196,22 @@ for q in q_values:
             # plt.suptitle("Path Visualization", fontsize=16)
             # plt.tight_layout()
             # plt.show()
-            winnable_count += 1
             
     winnable_frequencies.append(winnable_count / num_trials)
+    if winnable_count != 0:
+        bot1_winnable_success.append(bot1_wins / winnable_count)
+        bot2_winnable_success.append(bot2_wins / winnable_count)
+        bot3_winnable_success.append(bot3_wins / winnable_count)
+        bot4_winnable_success.append(bot4_wins / winnable_count)
+    else:
+        bot1_winnable_success.append(0)
+        bot2_winnable_success.append(0)
+        bot3_winnable_success.append(0)
+        bot4_winnable_success.append(0)
 
 # Plot results
-# Plot simple winnability results
 plt.figure(figsize=(10, 6))
 
-# Plot winnability curve with markers
 plt.plot(q_values, winnable_frequencies, marker='o', linestyle='-', color='blue')
 
 # Add grid
@@ -209,14 +222,36 @@ plt.xlabel('Flammability (q)')
 plt.ylabel('Probability of Winnability')
 plt.title('Winnability of Simulation as a Function of Fire Spread Probability')
 
-# Set y-axis limits
-plt.ylim(0, 1)
+
+# Show plot
+plt.show()
+
+# Create plot
+plt.figure(figsize=(10, 6))
+
+# Plot success rates for each bot
+plt.plot(q_values, bot1_winnable_success, marker='o', label="Bot1", color='blue')
+plt.plot(q_values, bot2_winnable_success, marker='o', label="Bot2", color='orange')
+plt.plot(q_values, bot3_winnable_success, marker='o', label="Bot3", color='green')
+plt.plot(q_values, bot4_winnable_success, marker='o', label="Bot4", color='red')
+
+# Add grid
+plt.grid(True)
+
+# Labels and title
+plt.xlabel('Flammability (q)')
+plt.ylabel('Success Rate on Winnable Simulations')
+plt.title('Bot Performance on Winnable Simulations')
+
+# Add legend
+plt.legend()
 
 # Show plot
 plt.show()
 
 
 
+#question 5
 
 
 
