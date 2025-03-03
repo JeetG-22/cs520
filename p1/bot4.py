@@ -16,7 +16,6 @@ class Bot4:
         bot_pos = self.get_position(2)
         button_pos = self.get_position(4)
         self.visited_positions = [bot_pos]
-        
 
         # While the bot does not catch on fire
         while self.SHIP.grid[bot_pos[0]][bot_pos[1]] != 3:
@@ -163,7 +162,3 @@ class Bot4:
             for j in range(self.SHIP.N):
                 if self.SHIP.grid[i][j] == target:
                     return (i, j)
-
-    
-    def get_visited_positions(self):
-        return self.visited_positions

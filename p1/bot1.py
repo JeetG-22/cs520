@@ -85,7 +85,7 @@ class Bot1:
                     pos = (i, j)
                     return pos
 
-    
+    # For testing
     def get_visited_positions(self):
         return self.visited_positions
     
