@@ -11,7 +11,7 @@ import numpy as np
 import random
 from winnability import Winnability
 
-# N = 100 # number of trials
+N = 100 # number of trials
 q_values = [round(i * .05, 2) for i in range (1, 21)]
 bot1_q_successes = []
 bot2_q_successes = []
