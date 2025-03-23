@@ -3,16 +3,15 @@ import random
 
 class Ship:
 
-    # 0 = closed cell, 1 = open cell, 2 = bot cell, 3 = fire cell, 4 = button cell
+    # 0 = closed cell, 1 = open cell, 2 = bot cell, 3 = space rat cell
 
     # Creates ship with DxD blocked cells
-    def __init__(self, D):
-        self.N = D
-        self.grid = np.zeros((D, D), dtype=int)
+    def __init__(self):
+        self.N = 30
+        self.grid = np.zeros((30, 30), dtype=int)
         self.open_cells = {}
         self.init_ship()
         self.neighbour_directions = [(1, 0), (-1, 0), (0, 1), (0, -1)]
-        self.place_entities()
         
     # Opens cells to start creating the maze
     def init_ship(self):
@@ -97,51 +96,20 @@ class Ship:
                     sum += 1
             self.open_cells[closed_random_neighbour] = sum
         
-        # Double check if implemented correctly
-        # print(f"% Of Open Cells After Deadend: {100 * np.count_nonzero(self.grid)/(self.N**2)}%")
-        # print(self.open_cells)
-
+    # Modified to only place the bot and space rat, no fire or button
     def place_entities(self):
         open_cells_list = list(self.open_cells.keys())
-        fire_cell = open_cells_list.pop(random.randint(0, len(open_cells_list) - 1))
-        self.grid[fire_cell[0]][fire_cell[1]] = 3
-        button_cell = open_cells_list.pop(random.randint(0, len(open_cells_list) - 1))
-        self.grid[button_cell[0]][button_cell[1]] = 4
         bot_cell = open_cells_list.pop(random.randint(0, len(open_cells_list) - 1))
         self.grid[bot_cell[0]][bot_cell[1]] = 2
+        rat_cell = open_cells_list.pop(random.randint(0, len(open_cells_list) - 1))
+        self.grid[rat_cell[0]][rat_cell[1]] = 3
         
         #pop these cells as they are not considered open anymore 
-        self.open_cells.pop(fire_cell)
-        self.open_cells.pop(button_cell)
         self.open_cells.pop(bot_cell)
-        
-        return fire_cell, button_cell, bot_cell
+        self.open_cells.pop(rat_cell)
 
-    # Executes one step of fire spreading with flammability q       
-    def spread_fire(self, q):
+        return bot_cell, rat_cell
 
-        # Generate copy of the current ship
-        copy = self.grid.copy()
-
-        # For each cell check if its open and not burning
-        # Count number of on fire neighbors
-        for i in range(self.N):
-            for j in range(self.N):
-
-                if self.grid[i][j] not in [0, 3]:  # if it's a nonburning, open cell. Note: bot and button can catch on fire
-                    count = 0   # count the number of burning cells
-
-                    for (dx, dy) in self.neighbour_directions:
-                        if (0 <= i + dx < self.N) and (0 <= j + dy < self.N):
-                            count = count + 1 if self.grid[i + dx][j + dy] == 3 else count
-
-                    if count > 0:  # won't spread if there's no burning neighbors
-                        prob = 1 - (1 - q)**count
-                        if random.random() < prob:
-                            copy[i][j] = 3  # set on fire
-        
-        self.grid = copy
-                
     def __str__(self):
         output = ''
         for i in range(self.N):
