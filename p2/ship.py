@@ -110,31 +110,6 @@ class Ship:
 
         return bot_cell, rat_cell
 
-    # Executes one step of fire spreading with flammability q       
-    def spread_fire(self, q):
-
-        # Generate copy of the current ship
-        copy = self.grid.copy()
-
-        # For each cell check if its open and not burning
-        # Count number of on fire neighbors
-        for i in range(self.N):
-            for j in range(self.N):
-
-                if self.grid[i][j] not in [0, 3]:  # if it's a nonburning, open cell. Note: bot and button can catch on fire
-                    count = 0   # count the number of burning cells
-
-                    for (dx, dy) in self.neighbour_directions:
-                        if (0 <= i + dx < self.N) and (0 <= j + dy < self.N):
-                            count = count + 1 if self.grid[i + dx][j + dy] == 3 else count
-
-                    if count > 0:  # won't spread if there's no burning neighbors
-                        prob = 1 - (1 - q)**count
-                        if random.random() < prob:
-                            copy[i][j] = 3  # set on fire
-        
-        self.grid = copy
-                
     def __str__(self):
         output = ''
         for i in range(self.N):

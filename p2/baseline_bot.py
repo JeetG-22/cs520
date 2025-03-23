@@ -12,6 +12,15 @@ class Baseline:
                                     (1, 1), (1, -1), (-1, 1), (-1, -1)]
 
         self.estimated_pos = ()
+        self.possible_positions = self.spaceship.open_cells.copy()
+
+    # Identify where the bot is
+    def get_est_pos(self):
+        
+        # Keep a knowledge base of open cells on the map
+        for key, item in self.possible_positions:
+            pass
+
 
     # returns True if ping is heard
     # sens is a constant specifying the sensitivity of the detector
