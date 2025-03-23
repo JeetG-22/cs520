@@ -47,8 +47,7 @@ class Bot3:
 
 
     def get_path(self, curr_pos, avoid_adj_fire):
-        # print(avoid_adj_fire)
-        # print(self.SHIP)
+
         # Get source node
         self.bot_start = curr_pos
         

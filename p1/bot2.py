@@ -14,7 +14,7 @@ class Bot2:
         self.visited_positions = [bot_pos]
         path = self.get_path(bot_pos)
         
-        #loop until bot finds correct path or fails
+        # loop until bot finds correct path or fails
         while path and len(path) > 1:
 
             # move bot to the next cell & update the new position on grid for the next path 
@@ -85,7 +85,7 @@ class Bot2:
 
         return None  # No solution
         
-
+    # Gets bot's position on grid
     def get_position(self):
 
         pos = (0,0)
