@@ -3,7 +3,7 @@ import random
 
 class Ship:
 
-    # 0 = closed cell, 1 = open cell, 2 = bot cell, 3 = fire cell, 4 = button cell
+    # 0 = closed cell, 1 = open cell, 2 = bot cell, 3 = space rat cell
 
     # Creates ship with DxD blocked cells
     def __init__(self):
@@ -96,16 +96,19 @@ class Ship:
                     sum += 1
             self.open_cells[closed_random_neighbour] = sum
         
-    # Modified to only place the bot, no fire or button
+    # Modified to only place the bot and space rat, no fire or button
     def place_entities(self):
         open_cells_list = list(self.open_cells.keys())
         bot_cell = open_cells_list.pop(random.randint(0, len(open_cells_list) - 1))
         self.grid[bot_cell[0]][bot_cell[1]] = 2
+        rat_cell = open_cells_list.pop(random.randint(0, len(open_cells_list) - 1))
+        self.grid[rat_cell[0]][rat_cell[1]] = 3
         
         #pop these cells as they are not considered open anymore 
         self.open_cells.pop(bot_cell)
-        
-        return bot_cell
+        self.open_cells.pop(rat_cell)
+
+        return bot_cell, rat_cell
 
     # Executes one step of fire spreading with flammability q       
     def spread_fire(self, q):

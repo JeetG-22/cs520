@@ -8,6 +8,8 @@ class Baseline:
         self.eight_neighbor_dirs = [(1, 0), (-1, 0), (0, 1), (0, -1),
                                     (1, 1), (1, -1), (-1, 1), (-1, -1)]
 
+    
+
     # Returns the current position of the bot
     def get_position(self):
         pos = (0, 0)        
