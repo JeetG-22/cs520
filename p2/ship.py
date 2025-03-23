@@ -96,25 +96,16 @@ class Ship:
                     sum += 1
             self.open_cells[closed_random_neighbour] = sum
         
-        # Double check if implemented correctly
-        # print(f"% Of Open Cells After Deadend: {100 * np.count_nonzero(self.grid)/(self.N**2)}%")
-        # print(self.open_cells)
-
+    # Modified to only place the bot, no fire or button
     def place_entities(self):
         open_cells_list = list(self.open_cells.keys())
-        fire_cell = open_cells_list.pop(random.randint(0, len(open_cells_list) - 1))
-        self.grid[fire_cell[0]][fire_cell[1]] = 3
-        button_cell = open_cells_list.pop(random.randint(0, len(open_cells_list) - 1))
-        self.grid[button_cell[0]][button_cell[1]] = 4
         bot_cell = open_cells_list.pop(random.randint(0, len(open_cells_list) - 1))
         self.grid[bot_cell[0]][bot_cell[1]] = 2
         
         #pop these cells as they are not considered open anymore 
-        self.open_cells.pop(fire_cell)
-        self.open_cells.pop(button_cell)
         self.open_cells.pop(bot_cell)
         
-        return fire_cell, button_cell, bot_cell
+        return bot_cell
 
     # Executes one step of fire spreading with flammability q       
     def spread_fire(self, q):
