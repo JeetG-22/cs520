@@ -6,9 +6,9 @@ class Ship:
     # 0 = closed cell, 1 = open cell, 2 = bot cell, 3 = space rat cell
 
     # Creates ship with DxD blocked cells
-    def __init__(self):
-        self.N = 30
-        self.grid = np.zeros((30, 30), dtype=int)
+    def __init__(self, N = 30):
+        self.N = N
+        self.grid = np.zeros((N, N), dtype=int)
         self.open_cells = {}
         self.init_ship()
         self.neighbour_directions = [(1, 0), (-1, 0), (0, 1), (0, -1)]
@@ -104,9 +104,9 @@ class Ship:
         rat_cell = open_cells_list.pop(random.randint(0, len(open_cells_list) - 1))
         self.grid[rat_cell[0]][rat_cell[1]] = 3
         
-        #pop these cells as they are not considered open anymore 
-        self.open_cells.pop(bot_cell)
-        self.open_cells.pop(rat_cell)
+        # #pop these cells as they are not considered open anymore 
+        # self.open_cells.pop(bot_cell)
+        # self.open_cells.pop(rat_cell)
 
         return bot_cell, rat_cell
 

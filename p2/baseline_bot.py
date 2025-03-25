@@ -19,7 +19,7 @@ class Baseline:
         num_neighbors = self.count_blocked_neighbors(actual_bot_pos)
 
         # Keep a knowledge base of open cells on the map
-        for key, _ in self.possible_positions.items():
+        for key, _ in self.possible_positions.copy().items():
 
             # Keep track of the number of currently blocked neighbors
             self.possible_positions[key] = self.count_blocked_neighbors(key)
@@ -53,7 +53,7 @@ class Baseline:
                 success = False
             
             # Update the other positions and attempt move
-            for pos in self.possible_positions:
+            for pos in self.possible_positions.copy():
                 pos_new = (pos[0] + most_open_dir[0], pos[1] + most_open_dir[1])
                 if success:  # if the move worked and the new pos did not
                     if pos_new not in self.spaceship.open_cells:
@@ -64,7 +64,7 @@ class Baseline:
                         self.possible_positions.pop(pos)
         
         # Once only one candidate remains, set it as the estimated position.
-        self.estimated_pos = self.possible_positions.pop()
+        self.estimated_pos = self.possible_positions.popitem()
         return self.estimated_pos
 
     # returns True if ping is heard
