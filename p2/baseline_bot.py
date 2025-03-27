@@ -15,29 +15,26 @@ class Baseline:
 
     # Identify where the bot is
     def get_est_pos(self, actual_bot_pos):
-        self.possible_positions = self.spaceship.open_cells.copy()
-            
+        self.possible_positions = {k: k for k in self.spaceship.open_cells}  # the key will be the original position and the value is the currently tested position
+
         # Repeat until we get the bot's true position
         curr = actual_bot_pos
+
         while len(self.possible_positions) > 1:
-            num_neighbors = self.count_blocked_neighbors(curr)
+            num_neighbors = self.count_blocked_neighbors(curr) 
 
             # Keep a knowledge base of open cells on the map
-            for key, _ in self.possible_positions.copy().items():
+            for key, pos in self.possible_positions.copy().items():
 
-                # Keep track of the number of currently blocked neighbors
-                self.possible_positions[key] = self.count_blocked_neighbors(key)
-
-                if self.possible_positions[key] != num_neighbors:  # if the bot's blocked cells don't match
+                if self.count_blocked_neighbors(pos) != num_neighbors:  # if the bot's blocked cells don't match
                     self.possible_positions.pop(key)
 
-                # Keep track of the most commonly open direction 
-                dir_frequency = {d: 0 for d in self.spaceship.neighbour_directions}
+            dir_frequency = {d: 0 for d in self.spaceship.neighbour_directions}
 
-            for pos in self.possible_positions:
+            for pos, curr_pos in self.possible_positions.items():
 
                 for d in self.spaceship.neighbour_directions:
-                    new_pos = (pos[0] + d[0], pos[1] + d[1])
+                    new_pos = (curr_pos[0] + d[0], curr_pos[1] + d[1])
 
                     if new_pos in self.spaceship.open_cells:
                         dir_frequency[d] += 1
@@ -54,8 +51,9 @@ class Baseline:
                 success = False
             
             # Update the other positions and attempt move
-            for pos in self.possible_positions.copy():
-                pos_new = (pos[0] + most_open_dir[0], pos[1] + most_open_dir[1])
+            for pos, curr_pos in self.possible_positions.copy().items():
+                pos_new = (curr_pos[0] + most_open_dir[0], curr_pos[1] + most_open_dir[1])  # current position
+                self.possible_positions[pos] = pos_new
                 if success:  # if the move worked and the new pos did not
                     if pos_new not in self.spaceship.open_cells:
                         self.possible_positions.pop(pos)
