@@ -16,22 +16,23 @@ class Baseline:
     # Identify where the bot is
     def get_est_pos(self, actual_bot_pos):
         self.possible_positions = self.spaceship.open_cells.copy()
-        num_neighbors = self.count_blocked_neighbors(actual_bot_pos)
-
-        # Keep a knowledge base of open cells on the map
-        for key, _ in self.possible_positions.copy().items():
-
-            # Keep track of the number of currently blocked neighbors
-            self.possible_positions[key] = self.count_blocked_neighbors(key)
-
-            if self.possible_positions[key] != num_neighbors:  # if the bot's blocked cells don't match
-                self.possible_positions.pop(key)
             
         # Repeat until we get the bot's true position
         curr = actual_bot_pos
         while len(self.possible_positions) > 1:
-            # Keep track of the most commoonly open direction 
-            dir_frequency = {d: 0 for d in self.spaceship.neighbour_directions}
+            num_neighbors = self.count_blocked_neighbors(curr)
+
+            # Keep a knowledge base of open cells on the map
+            for key, _ in self.possible_positions.copy().items():
+
+                # Keep track of the number of currently blocked neighbors
+                self.possible_positions[key] = self.count_blocked_neighbors(key)
+
+                if self.possible_positions[key] != num_neighbors:  # if the bot's blocked cells don't match
+                    self.possible_positions.pop(key)
+
+                # Keep track of the most commonly open direction 
+                dir_frequency = {d: 0 for d in self.spaceship.neighbour_directions}
 
             for pos in self.possible_positions:
 
@@ -65,7 +66,7 @@ class Baseline:
         
         # Once only one candidate remains, set it as the estimated position.
         self.estimated_pos = self.possible_positions.popitem()
-        return self.estimated_pos
+        return self.estimated_pos[0]
 
     # returns True if ping is heard
     # sens is a constant specifying the sensitivity of the detector
