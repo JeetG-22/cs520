@@ -53,10 +53,11 @@ class Baseline:
             # Update the other positions and attempt move
             for pos, curr_pos in self.possible_positions.copy().items():
                 pos_new = (curr_pos[0] + most_open_dir[0], curr_pos[1] + most_open_dir[1])  # current position
-                self.possible_positions[pos] = pos_new
                 if success:  # if the move worked and the new pos did not
                     if pos_new not in self.spaceship.open_cells:
                         self.possible_positions.pop(pos)
+                    else:
+                        self.possible_positions[pos] = pos_new
                 else:
                     # If the move failed, then positions that would have allowed the move should be removed
                     if pos_new in self.spaceship.open_cells:
