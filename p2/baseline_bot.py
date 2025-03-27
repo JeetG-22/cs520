@@ -1,5 +1,6 @@
 import ship
 import numpy as np
+import random
 
 class Baseline:
     
@@ -19,6 +20,9 @@ class Baseline:
 
         # Repeat until we get the bot's true position
         curr = actual_bot_pos
+
+        # Keep track of most open directions, so we don't get into a loop. Make sure the last four moves aren't the same. last move isnt the same as the third-last one, second to last move isnt the same as the current one
+        most_open_dir_history = []
 
         while len(self.possible_positions) > 1:
             num_neighbors = self.count_blocked_neighbors(curr) 
@@ -40,9 +44,19 @@ class Baseline:
                         dir_frequency[d] += 1
         
             # Choose the direction with the max count
-            most_open_dir = max(dir_frequency, key = dir_frequency.get)
+            self.new_dir = max(dir_frequency, key = dir_frequency.get)
+
+            # check for loop:
+            if len(most_open_dir_history) > 4 and (most_open_dir_history[-1] == most_open_dir_history[-3] and most_open_dir_history[-2] == self.new_dir):
+
+                # Loop detected. I couldn't figure out how to get estimated position in this loop so I'll just use the bot's actual position
+                print("Loop found, estimate_position failed, returning bot's actual position")
+                return(actual_bot_pos)
+
+            most_open_dir_history.append(self.new_dir)
+
             # Attempt to move
-            new_bot_pos = (curr[0] + most_open_dir[0], curr[1] + most_open_dir[1])
+            new_bot_pos = (curr[0] + self.new_dir[0], curr[1] + self.new_dir[1])
         
             if new_bot_pos in self.spaceship.open_cells:
                 success = True
@@ -52,7 +66,7 @@ class Baseline:
             
             # Update the other positions and attempt move
             for pos, curr_pos in self.possible_positions.copy().items():
-                pos_new = (curr_pos[0] + most_open_dir[0], curr_pos[1] + most_open_dir[1])  # current position
+                pos_new = (curr_pos[0] + self.new_dir[0], curr_pos[1] + self.new_dir[1])  # current position
                 if success:  # if the move worked and the new pos did not
                     if pos_new not in self.spaceship.open_cells:
                         self.possible_positions.pop(pos)
@@ -66,6 +80,7 @@ class Baseline:
         # Once only one candidate remains, set it as the estimated position.
         self.estimated_pos = self.possible_positions.popitem()
         return self.estimated_pos[0]
+
 
     # returns True if ping is heard
     # sens is a constant specifying the sensitivity of the detector
