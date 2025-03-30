@@ -52,6 +52,8 @@ class Baseline:
 
                 # Loop detected. I couldn't figure out how to get estimated position in this loop so I'll just use the bot's actual position
                 print("Loop found, estimate_position failed, returning bot's actual position")
+                # Notes. I DID try randomizing the move rather than using the most commonly open position. However, this just led the bot back into the loop
+                # after the first couple random moves, because all the candidate positions share that open space.
                 return(actual_bot_pos)
 
             most_open_dir_history.append(self.new_dir)
