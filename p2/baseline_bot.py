@@ -98,9 +98,9 @@ class Baseline:
                 
         while True:
             ping_use += 1
-            ping_found = self.get_ping(alpha)
+            ping_found = self.get_ping(alpha, bot_pos)
             
-            if(bot_pos == self.rat_pos):
+            if(self.rat_detected(bot_pos)):
                 print("Rat Found!")
                 break
             
@@ -128,7 +128,7 @@ class Baseline:
                 
             #update rat knowledge base
             rat_kb = updated_rat_kb
-            print("Rat Knowledge Base: ", str(rat_kb))
+            # print("Rat Knowledge Base: ", str(rat_kb))
             
             target_cell = max(rat_kb, key=rat_kb.get)
             print("Target Cell: " , str(target_cell))
@@ -151,13 +151,14 @@ class Baseline:
                 bot_pos = next_pos
                 moves += 1
                 
-                if(bot_pos == self.rat_pos): #recheck to see if we are in rat cell
+                if(self.rat_detected(bot_pos)): #recheck to see if we are in rat cell
                     print("Ending Bot Position: " + str(bot_pos))
                     print("Rat Found!")
                     break
                 
                 #remove new bot pos from rat KB
                 if(bot_pos in rat_kb):
+                    print(len(rat_kb))
                     redistribute_factor = rat_kb[bot_pos] / (len(rat_kb) - 1)
                     rat_kb.pop(bot_pos)
                     
@@ -170,10 +171,13 @@ class Baseline:
 
     # returns True if ping is heard
     # sens is a constant specifying the sensitivity of the detector
-    def get_ping(self, sens):
+    def get_ping(self, sens, curr_bot_pos = None):
+        
+        if curr_bot_pos is None:
+            curr_bot_pos = self.pos
 
         # get manhattan distance between rat and bot
-        dist = abs(self.pos[0] - self.rat_pos[0]) + abs(self.pos[1] - self.rat_pos[1])
+        dist = abs(curr_bot_pos[0] - self.rat_pos[0]) + abs(curr_bot_pos[1] - self.rat_pos[1])
 
         prob = np.exp(-1 * sens * (dist - 1))
 
@@ -182,6 +186,12 @@ class Baseline:
         
         return False
 
+    #for definitive detection
+    def rat_detected(self, bot_pos = None):
+        if bot_pos is None:
+            bot_pos = self.pos
+        return bot_pos == self.rat_pos
+        
 
     # Returns the current position of the given val
     def get_position(self, val):

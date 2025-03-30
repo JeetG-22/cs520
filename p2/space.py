@@ -1,6 +1,6 @@
 import ship
 import baseline_bot
-N = 7
+N = 30
 
 # Dimensions set to 30x30
 spaceship = ship.Ship(N)
@@ -28,5 +28,7 @@ print(spaceship.grid)
 bot = baseline_bot.Baseline(spaceship)
 print("Actual Bot Position: " + str(bot.get_position(2)))
 print("Estimated Bot Position: " + str(bot.get_est_pos(bot.get_position(2))))
+
+moves, ping_use = bot.find_rat(bot.get_est_pos(bot.get_position(2)), .001)
 print("Rat Actual Position: "+ str(bot.get_position(3)))
-bot.find_rat(bot.get_est_pos(bot.get_position(2)), .01)
+print("# Of Moves: " + str(moves) + "|| # Of Ping Usages: " + str(ping_use))
