@@ -17,6 +17,7 @@ class Baseline:
     # Identify where the bot is
     def get_est_pos(self, actual_bot_pos):
         self.possible_positions = {k: k for k in self.spaceship.open_cells}  # the key will be the original position and the value is the currently tested position
+        print(self.possible_positions)
 
         # Repeat until we get the bot's true position
         curr = actual_bot_pos
@@ -80,6 +81,89 @@ class Baseline:
         # Once only one candidate remains, set it as the estimated position.
         self.estimated_pos = self.possible_positions.popitem()
         return self.estimated_pos[0]
+    
+    def find_rat(self, est_pos, alpha):
+        moves = ping_use = 0
+        bot_pos = est_pos
+        rat_kb = {} #knowledge base for rat (stores probabilities of open cells)
+        
+        #initialize all open cells probabilities to some uniform value
+        count_open_cells = len(self.spaceship.open_cells)
+        for cell_pos in self.spaceship.open_cells:
+            if(cell_pos != bot_pos): #to not include bot cell
+                rat_kb[cell_pos] = 1.0 / (count_open_cells - 1)
+        print("Rat Knowledge Base Original: ", str(rat_kb))
+                
+        while True:
+            ping_use += 1
+            ping_found = self.get_ping(alpha)
+            
+            if(bot_pos == self.rat_pos):
+                print("Rat Found!")
+                break
+            
+            sum_prob = 0 #factor to make sure the probabilities add up to 1
+            updated_rat_kb = {} #temporary storage instead of manipulating rat_kb directly during the loop
+            for open_pos, prob in rat_kb.items():
+                
+                # get manhattan distance between cell and bot estimated position
+                dist = abs(open_pos[0] - bot_pos[0]) + abs(open_pos[1] - bot_pos[1])
+                updated_prob = 0
+                #two situations: ping is heard or ping is not heard
+                if(ping_found): #formula: P(rat in cell | ping found) = (P(ping found | rat in cell) * P(rat in cell)) / P(ping found)
+                    prob_ping = np.exp(-alpha * (dist - 1))
+                    updated_prob = prob_ping * prob
+                else: #formula: P(rat in cell | ping not found) = (P(ping not found | rat in cell) * P(rat in cell)) / P(ping not found)
+                    prob_ping = 1 - np.exp(-alpha * (dist - 1))
+                    updated_prob = prob_ping * prob
+                updated_rat_kb[open_pos] = updated_prob
+                sum_prob += updated_prob
+            
+            #to finish formula (dividing P(ping found) or P(ping not found))
+            if sum_prob > 0:
+                for cell in updated_rat_kb:
+                    updated_rat_kb[cell] /= sum_prob
+                
+            #update rat knowledge base
+            rat_kb = updated_rat_kb
+            print("Rat Knowledge Base: ", str(rat_kb))
+            
+            target_cell = max(rat_kb, key=rat_kb.get)
+            print("Target Cell: " , str(target_cell))
+            
+            dir = None
+            min_dist = float('inf')
+            
+            #finding best cardinal direction using manhattan distance for minimal path 
+            for cardinal_dir in self.spaceship.neighbour_directions:
+                temp_pos = (bot_pos[0] + cardinal_dir[0], bot_pos[1] + cardinal_dir[1])
+                
+                if(temp_pos in self.spaceship.open_cells): #to make sure its not blocked or outside grid
+                    temp_dist = abs(temp_pos[0] - target_cell[0]) + abs(temp_pos[1] - target_cell[1])
+                    if(min_dist > temp_dist):
+                        min_dist = temp_dist
+                        dir = cardinal_dir
+            
+            if(dir):
+                next_pos = (bot_pos[0] + dir[0], bot_pos[1] + dir[1])
+                bot_pos = next_pos
+                moves += 1
+                
+                if(bot_pos == self.rat_pos): #recheck to see if we are in rat cell
+                    print("Ending Bot Position: " + str(bot_pos))
+                    print("Rat Found!")
+                    break
+                
+                #remove new bot pos from rat KB
+                if(bot_pos in rat_kb):
+                    redistribute_factor = rat_kb[bot_pos] / (len(rat_kb) - 1)
+                    rat_kb.pop(bot_pos)
+                    
+                    for cells in rat_kb:
+                        rat_kb[cells] += redistribute_factor
+        return ping_use, moves
+            
+                    
 
 
     # returns True if ping is heard
@@ -115,7 +199,7 @@ class Baseline:
             x = cell[0] + dx
             y = cell[1] + dy
 
-            if 0 <= x <= 30 and 0 <= y <= 30 and self.spaceship.grid[x][y] == 0:
+            if 0 <= x <= self.spaceship.N and 0 <= y <= self.spaceship.N and self.spaceship.grid[x][y] == 0:
                 count += 1
 
         return count

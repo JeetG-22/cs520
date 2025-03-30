@@ -1,6 +1,6 @@
 import ship
 import baseline_bot
-N = 5
+N = 7
 
 # Dimensions set to 30x30
 spaceship = ship.Ship(N)
@@ -26,5 +26,7 @@ spaceship.place_entities()
 print(spaceship.grid)
 
 bot = baseline_bot.Baseline(spaceship)
-print(bot.get_position(2))
-print(bot.get_est_pos(bot.get_position(2)))
+print("Actual Bot Position: " + str(bot.get_position(2)))
+print("Estimated Bot Position: " + str(bot.get_est_pos(bot.get_position(2))))
+print("Rat Actual Position: "+ str(bot.get_position(3)))
+bot.find_rat(bot.get_est_pos(bot.get_position(2)), .01)
