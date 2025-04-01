@@ -143,7 +143,7 @@ class Baseline:
                 else:
                     print("Rat Knowledge Base Is Empty!")
                     break
-            else:
+            if current_path:
                 bot_pos = current_path.pop(0)
                 moves += 1
                 
@@ -151,7 +151,7 @@ class Baseline:
                     print("Ending Bot Position: " + str(bot_pos))
                     print("Rat Found!")
                     break
-        return ping_use, moves
+        return moves, ping_use
     
     #bfs to find path to target cell
     def find_path(self, start, end):
