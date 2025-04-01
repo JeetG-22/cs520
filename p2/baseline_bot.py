@@ -95,6 +95,8 @@ class Baseline:
             if(cell_pos != bot_pos): #to not include bot cell
                 rat_kb[cell_pos] = 1.0 / (count_open_cells - 1)
         print("Rat Knowledge Base Original: ", str(rat_kb))
+        
+        current_path = []
                 
         while True:
             ping_use += 1
@@ -107,6 +109,9 @@ class Baseline:
             sum_prob = 0 #factor to make sure the probabilities add up to 1
             updated_rat_kb = {} #temporary storage instead of manipulating rat_kb directly during the loop
             for open_pos, prob in rat_kb.items():
+                
+                if(bot_pos == open_pos): #we know that can't be here so we don't add it to the rat KB. 
+                    continue #removes the need for redistributing prob once we reach the target cell and find that the rat isn't there              
                 
                 # get manhattan distance between cell and bot estimated position
                 dist = abs(open_pos[0] - bot_pos[0]) + abs(open_pos[1] - bot_pos[1])
@@ -130,45 +135,51 @@ class Baseline:
             rat_kb = updated_rat_kb
             # print("Rat Knowledge Base: ", str(rat_kb))
             
-            target_cell = max(rat_kb, key=rat_kb.get)
-            print("Target Cell: " , str(target_cell))
-            
-            dir = None
-            min_dist = float('inf')
-            
-            #finding best cardinal direction using manhattan distance for minimal path 
-            for cardinal_dir in self.spaceship.neighbour_directions:
-                temp_pos = (bot_pos[0] + cardinal_dir[0], bot_pos[1] + cardinal_dir[1])
-                
-                if(temp_pos in self.spaceship.open_cells): #to make sure its not blocked or outside grid
-                    temp_dist = abs(temp_pos[0] - target_cell[0]) + abs(temp_pos[1] - target_cell[1])
-                    if(min_dist > temp_dist):
-                        min_dist = temp_dist
-                        dir = cardinal_dir
-            
-            if(dir):
-                next_pos = (bot_pos[0] + dir[0], bot_pos[1] + dir[1])
-                bot_pos = next_pos
+            if not current_path:
+                if(rat_kb):
+                    current_target_cell = max(rat_kb, key=rat_kb.get)
+                    print("Target Cell: " , str(current_target_cell))
+                    current_path = self.find_path(bot_pos, current_target_cell)
+                else:
+                    print("Rat Knowledge Base Is Empty!")
+                    break
+            else:
+                bot_pos = current_path.pop(0)
                 moves += 1
                 
                 if(self.rat_detected(bot_pos)): #recheck to see if we are in rat cell
                     print("Ending Bot Position: " + str(bot_pos))
                     print("Rat Found!")
                     break
-                
-                #remove new bot pos from rat KB
-                if(bot_pos in rat_kb):
-                    print(len(rat_kb))
-                    redistribute_factor = rat_kb[bot_pos] / (len(rat_kb) - 1)
-                    rat_kb.pop(bot_pos)
-                    
-                    for cells in rat_kb:
-                        rat_kb[cells] += redistribute_factor
         return ping_use, moves
+    
+    #bfs to find path to target cell
+    def find_path(self, start, end):
+        queue = []
+        queue.append(start)
+        visited = set([start])
+        parent = {start: None}
+        
+        while queue:
+            cell = queue.pop(0)
             
+            #return solution path 
+            if(cell == end):
+                path = []
+                while(cell is not None):
+                    path.append(cell)
+                    cell = parent[cell]
+                path.reverse()
+                return path
+            
+            for cardinal_dir in self.spaceship.neighbour_directions:
+                neighbour = (cardinal_dir[0] + cell[0], cardinal_dir[1] + cell[1])
+                if(neighbour in self.spaceship.open_cells and neighbour not in visited):
+                    queue.append(neighbour)
+                    visited.add(neighbour)
+                    parent[neighbour] = cell
+        return []
                     
-
-
     # returns True if ping is heard
     # sens is a constant specifying the sensitivity of the detector
     def get_ping(self, sens, curr_bot_pos = None):
