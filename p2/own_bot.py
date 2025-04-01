@@ -96,7 +96,7 @@ class Baseline:
                 rat_kb[cell_pos] = 1.0 / (count_open_cells - 1)
         # print("Rat Knowledge Base Original: ", str(rat_kb))
         
-        current_path = []
+        current_target_cell = bot_pos, current_path = []
                 
         while True:
             ping_use += 1
@@ -135,16 +135,13 @@ class Baseline:
             rat_kb = updated_rat_kb
             # print("Rat Knowledge Base: ", str(rat_kb))
             
-            if not current_path:
+            max_prob_cell = max(rat_kb, key=rat_kb.get)
+            
+            if not current_path or max_prob_cell != current_target_cell:
                 if(rat_kb):
                     current_target_cell = max(rat_kb, key=rat_kb.get)
                     # print("Target Cell: " , str(current_target_cell))
                     current_path = self.find_path(bot_pos, current_target_cell)
-                     #TODO: what should we do about the edge case where a particular target cell has the highest prob but is unreachable given the bots current position. 
-                     # should i remove it from the rat_kb or should i keep it a let the ping keep going until a new target cell is found (would cause a discrepency
-                     # in the moves and the ping usages).
-                    # if(not current_path):
-                    #     print(str(current_path) + "in here~~~~~~~~~~~~~~~~~~")
                 else:
                     print("Rat Knowledge Base Is Empty!")
                     break
@@ -153,7 +150,7 @@ class Baseline:
                 moves += 1
                 
                 if(self.rat_detected(bot_pos)): #recheck to see if we are in rat cell
-                    print("Ending Baseline Bot Position: " + str(bot_pos))
+                    print("Ending Own Bot Position: " + str(bot_pos))
                     print("Rat Found!")
                     break
         return moves, ping_use
