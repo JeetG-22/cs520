@@ -19,8 +19,8 @@ class Ship:
         set_one_neighbour = set()
         
         # Randomly open a square in the interior
-        initial_open_cell_row = random.randint(1, self.N-2)
-        initial_open_cell_col = random.randint(1, self.N-2)
+        initial_open_cell_row = random.randint(1, self.N-3) #-3 to make sure the outer edges are blocked and aren't considered neighbours
+        initial_open_cell_col = random.randint(1, self.N-3)
         self.grid[initial_open_cell_row][initial_open_cell_col] = 1 
         
         self.open_cells[(initial_open_cell_row, initial_open_cell_col)] = 0
@@ -44,7 +44,7 @@ class Ship:
             for (i, j) in self.neighbour_directions:
 
                 # If it's inside of the ship grid
-                if (random_cell[0] + i >= 0 and random_cell[0] + i < self.N and random_cell[1] + j >= 0 and random_cell[1] + j < self.N):
+                if (random_cell[0] + i >= 1 and random_cell[0] + i < self.N - 1 and random_cell[1] + j >= 1 and random_cell[1] + j < self.N - 1):
                     neighbour = (random_cell[0] + i, random_cell[1] + j)
                     if (neighbour in self.open_cells):  # Check to see if it is an open cell already
                         self.open_cells[neighbour] += 1

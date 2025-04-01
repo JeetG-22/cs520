@@ -140,6 +140,11 @@ class Baseline:
                     current_target_cell = max(rat_kb, key=rat_kb.get)
                     print("Target Cell: " , str(current_target_cell))
                     current_path = self.find_path(bot_pos, current_target_cell)
+                     #TODO: what should we do about the edge case where a particular target cell has the highest prob but is unreachable given the bots current position. 
+                     # should i remove it from the rat_kb or should i keep it a let the ping keep going until a new target cell is found (would cause a discrepency
+                     # in the moves and the ping usages).
+                    # if(not current_path):
+                    #     print(str(current_path) + "in here~~~~~~~~~~~~~~~~~~")
                 else:
                     print("Rat Knowledge Base Is Empty!")
                     break
