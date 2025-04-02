@@ -53,7 +53,6 @@ class Baseline:
             if len(most_open_dir_history) > 4 and (most_open_dir_history[-1] == most_open_dir_history[-3] and most_open_dir_history[-2] == self.new_dir):
 
                 # Loop detected
-                print("Loop found")
                 loop = True
 
             # Move in random direction each time to escape dead end.
