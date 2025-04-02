@@ -25,6 +25,8 @@ class Baseline:
         # Keep track of most open directions, so we don't get into a loop. Make sure the last four moves aren't the same. last move isnt the same as the third-last one, second to last move isnt the same as the current one
         most_open_dir_history = []
 
+        loop = False
+
         while len(self.possible_positions) > 1:
             num_neighbors = self.count_blocked_neighbors(curr) 
 
@@ -50,11 +52,13 @@ class Baseline:
             # check for loop:
             if len(most_open_dir_history) > 4 and (most_open_dir_history[-1] == most_open_dir_history[-3] and most_open_dir_history[-2] == self.new_dir):
 
-                # Loop detected. I couldn't figure out how to get estimated position in this loop so I'll just use the bot's actual position
-                print("Loop found, estimate_position failed, returning bot's actual position")
-                # Notes. I DID try randomizing the move rather than using the most commonly open position. However, this just led the bot back into the loop
-                # after the first couple random moves, because all the candidate positions share that open space.
-                return(actual_bot_pos)
+                # Loop detected
+                print("Loop found")
+                loop = True
+
+            # Move in random direction each time to escape dead end.
+            if loop:
+                self.new_dir = random.choice(self.spaceship.neighbour_directions)
 
             most_open_dir_history.append(self.new_dir)
 
