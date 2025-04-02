@@ -84,7 +84,7 @@ class Baseline:
         self.estimated_pos = self.possible_positions.popitem()
         return self.estimated_pos[0]
     
-    def find_rat(self, est_pos, alpha):
+    def find_rat(self, est_pos, alpha):        
         moves = ping_use = 0
         bot_pos = est_pos
         rat_kb = {} #knowledge base for rat (stores probabilities of open cells)
@@ -98,7 +98,7 @@ class Baseline:
         
         current_target_cell = bot_pos
         current_path = []
-                
+        threshold = 1.25
         while True:
             ping_use += 1
             ping_found = self.get_ping(alpha, bot_pos)
@@ -138,10 +138,10 @@ class Baseline:
             
             max_prob_cell = max(rat_kb, key=rat_kb.get)
             
-            if not current_path or max_prob_cell != current_target_cell:
+            if not current_path or (max_prob_cell != current_target_cell and rat_kb[max_prob_cell] > threshold * rat_kb[current_target_cell]):
                 if(rat_kb):
                     current_target_cell = max(rat_kb, key=rat_kb.get)
-                    # print("Target Cell: " , str(current_target_cell))
+                    print("Target Cell: " , str(current_target_cell), " | Prob: " + str(rat_kb[current_target_cell]))
                     current_path = self.find_path(bot_pos, current_target_cell)
                 else:
                     print("Rat Knowledge Base Is Empty!")
@@ -151,10 +151,10 @@ class Baseline:
                 moves += 1
                 
                 if(self.rat_detected(bot_pos)): #recheck to see if we are in rat cell
-                    print("Ending Own Bot Position: " + str(bot_pos))
+                    # print("Ending Own Bot Position: " + str(bot_pos))
                     print("Rat Found!")
                     break
-        return moves, ping_use
+        return moves, ping_use, str(bot_pos)
     
     #bfs to find path to target cell
     def find_path(self, start, end):

@@ -153,10 +153,10 @@ class Baseline:
                 moves += 1
                 
                 if(self.rat_detected(bot_pos)): #recheck to see if we are in rat cell
-                    print("Ending Baseline Bot Position: " + str(bot_pos))
+                    # print("Ending Baseline Bot Position: " + str(bot_pos))
                     print("Rat Found!")
                     break
-        return moves, ping_use
+        return moves, ping_use, str(bot_pos)
     
     #bfs to find path to target cell
     def find_path(self, start, end):
