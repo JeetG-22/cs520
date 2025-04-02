@@ -98,7 +98,8 @@ class Baseline:
         
         current_target_cell = bot_pos
         current_path = []
-                
+        threshold = 1.25
+        
         while True:
             ping_use += 1
             ping_found = self.get_ping(alpha, bot_pos)
@@ -138,7 +139,7 @@ class Baseline:
             
             max_avg_prob_cell = self.find_best_cluster(rat_kb)
             
-            if not current_path or max_avg_prob_cell != current_target_cell:
+            if not current_path or (max_avg_prob_cell != current_target_cell and rat_kb[max_avg_prob_cell] > threshold * rat_kb[current_target_cell]):
                 if(rat_kb):
                     current_target_cell = max_avg_prob_cell
                     # print("Target Cell: " , str(current_target_cell))
@@ -154,14 +155,14 @@ class Baseline:
                     print("Ending Own Bot 2 Position: " + str(bot_pos))
                     print("Rat Found!")
                     break
-        return moves, ping_use
+        return moves, ping_use, str(bot_pos)
     
     def find_best_cluster(self, rat_kb):
         if not rat_kb:
             return None
         
         best_cell = None
-        best_avg_prob = None
+        best_avg_prob = 0
         for cell, prob in rat_kb.items():
             total_prob = prob
             valid_cells_count = 1
