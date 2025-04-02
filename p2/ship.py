@@ -84,17 +84,18 @@ class Ship:
                 if(potential_neightbor in closed_cells): #no need to check grid constraints with the closed_cells set
                     deadend_open_cells[coords].append(potential_neightbor)
             
-            # Select random neighbour to be an open cell
-            closed_random_neighbour = deadend_open_cells[coords].pop(random.randint(0, len(deadend_open_cells[coords]) - 1))
-            self.grid[closed_random_neighbour[0]][closed_random_neighbour[1]] = 1
+            if deadend_open_cells[coords]:
+                # Select random neighbour to be an open cell
+                closed_random_neighbour = deadend_open_cells[coords].pop(random.randint(0, len(deadend_open_cells[coords]) - 1))
+                self.grid[closed_random_neighbour[0]][closed_random_neighbour[1]] = 1
 
-            # Dynamically updates the count of open neighbors
-            sum = 0
-            for (i, j) in self.neighbour_directions: 
-                if ((closed_random_neighbour[0] + i, closed_random_neighbour[1] + j) in self.open_cells):
-                    self.open_cells[(closed_random_neighbour[0] + i, closed_random_neighbour[1] + j)] += 1 #updates surrounding open neighbour counts
-                    sum += 1
-            self.open_cells[closed_random_neighbour] = sum
+                # Dynamically updates the count of open neighbors
+                sum = 0
+                for (i, j) in self.neighbour_directions: 
+                    if ((closed_random_neighbour[0] + i, closed_random_neighbour[1] + j) in self.open_cells):
+                        self.open_cells[(closed_random_neighbour[0] + i, closed_random_neighbour[1] + j)] += 1 #updates surrounding open neighbour counts
+                        sum += 1
+                self.open_cells[closed_random_neighbour] = sum
         
     # Modified to only place the bot and space rat, no fire or button
     def place_entities(self):
