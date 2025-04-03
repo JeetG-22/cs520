@@ -106,7 +106,7 @@ class Baseline:
             ping_found = self.get_ping(alpha, bot_pos)
             
             if(self.rat_detected(bot_pos)):
-                print("Rat Found!")
+                # print("Rat Found!")
                 break
             
             sum_prob = 0 #factor to make sure the probabilities add up to 1
@@ -157,7 +157,7 @@ class Baseline:
                 
                 if(self.rat_detected(bot_pos)): #recheck to see if we are in rat cell
                     # print("Ending Baseline Bot Position: " + str(bot_pos))
-                    print("Rat Found!")
+                    # print("Rat Found!")
                     break
         return moves, ping_use, str(bot_pos)
     
