@@ -105,7 +105,7 @@ class Baseline:
         
         while True:
             ping_result = []
-            for _ in range(0, 10):
+            for _ in range(0, 5):
                 ping_result.append(self.get_ping(alpha, bot_pos))
                 ping_use += 1
             
@@ -137,28 +137,35 @@ class Baseline:
             if sum_prob > 0:
                 for cell in updated_rat_kb:
                     updated_rat_kb[cell] /= sum_prob
-                
+            
+            predict_rat_kb = {} #to store probabilities of the potential next cell that rat will move to
+            for cell_pos in self.spaceship.open_cells:
+                if(cell_pos != bot_pos): #to not include bot cell        
+                    predict_rat_kb[cell_pos] = 0
+            
+            for cell in updated_rat_kb.items():
+                open_neighbours = []
+                for cardinal_dir in self.spaceship.neighbour_directions:
+                    neighbour = (cell[0] + cardinal_dir[0], cell[1] + cardinal_dir[1])
+                    if(neighbour in self.spaceship.open_cells):
+                        open_neighbours.append(neighbour)
+                next_move_prob = updated_rat_kb[cell] / len(open_neighbours)
+                for open_neighbour in open_neighbours:
+                    predict_rat_kb[open_neighbour] += next_move_prob
+            
             #update rat knowledge base
-            rat_kb = updated_rat_kb
+            rat_kb = predict_rat_kb
             # print("Rat Knowledge Base: ", str(rat_kb))
             
             max_avg_prob_cell = self.find_best_cluster(rat_kb)
             
-            if not current_path or (max_avg_prob_cell != current_target_cell and rat_kb[max_avg_prob_cell] > threshold * rat_kb[current_target_cell]):
-                if(rat_kb):
-                    current_target_cell = max_avg_prob_cell
-                    # print("Target Cell: " , str(current_target_cell))
-                    current_path = self.find_path(bot_pos, current_target_cell)
-                else:
-                    print("Rat Knowledge Base Is Empty!")
-                    break
-            if current_path:
-                bot_pos = current_path.pop(0)
-                moves += 1
-                
-                if(self.rat_detected(bot_pos)): #recheck to see if we are in rat cell
-                    # print("Rat Found!")
-                    break
+            next_move = self.find_path(bot_pos, max_avg_prob_cell)
+            bot_pos = next_move
+            moves += 1
+            
+            if(self.rat_detected(bot_pos)): #recheck to see if we are in rat cell
+                # print("Rat Found!")
+                break
         return moves, ping_use, str(bot_pos)
     
     def find_best_cluster(self, rat_kb):
@@ -202,7 +209,7 @@ class Baseline:
                     path.append(cell)
                     cell = parent[cell]
                 path.reverse()
-                return path
+                return path[0]
             
             for cardinal_dir in self.spaceship.neighbour_directions:
                 neighbour = (cardinal_dir[0] + cell[0], cardinal_dir[1] + cell[1])
@@ -210,7 +217,7 @@ class Baseline:
                     queue.append(neighbour)
                     visited.add(neighbour)
                     parent[neighbour] = cell
-        return []
+        return None
                     
     # returns True if ping is heard
     # sens is a constant specifying the sensitivity of the detector
