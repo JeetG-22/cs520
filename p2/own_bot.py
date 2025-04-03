@@ -102,9 +102,12 @@ class Baseline:
         current_target_cell = bot_pos
         current_path = []
         threshold = 1.25
+        
         while True:
-            ping_use += 1
-            ping_found = self.get_ping(alpha, bot_pos)
+            ping_result = []
+            for _ in range(0, 10):
+                ping_result.append(self.get_ping(alpha, bot_pos))
+                ping_use += 1
             
             if(self.rat_detected(bot_pos)):
                 print("Rat Found!")
@@ -119,14 +122,14 @@ class Baseline:
                 
                 # get manhattan distance between cell and bot estimated position
                 dist = abs(open_pos[0] - bot_pos[0]) + abs(open_pos[1] - bot_pos[1])
-                updated_prob = 0
-                #two situations: ping is heard or ping is not heard
-                if(ping_found): #formula: P(rat in cell | ping found) = (P(ping found | rat in cell) * P(rat in cell)) / P(ping found)
-                    prob_ping = np.exp(-alpha * (dist - 1))
-                    updated_prob = prob_ping * prob
-                else: #formula: P(rat in cell | ping not found) = (P(ping not found | rat in cell) * P(rat in cell)) / P(ping not found)
-                    prob_ping = 1 - np.exp(-alpha * (dist - 1))
-                    updated_prob = prob_ping * prob
+                updated_prob = prob
+                for ping_found in ping_result:
+                    #two situations: ping is heard or ping is not heard
+                    if(ping_found): #formula: P(rat in cell | ping found) = (P(ping found | rat in cell) * P(rat in cell)) / P(ping found)
+                        prob_ping = np.exp(-alpha * (dist - 1))
+                    else: #formula: P(rat in cell | ping not found) = (P(ping not found | rat in cell) * P(rat in cell)) / P(ping not found)
+                        prob_ping = 1 - np.exp(-alpha * (dist - 1))
+                    updated_prob *= prob_ping
                 updated_rat_kb[open_pos] = updated_prob
                 sum_prob += updated_prob
             
@@ -144,7 +147,7 @@ class Baseline:
             if not current_path or (max_prob_cell != current_target_cell and rat_kb[max_prob_cell] > threshold * rat_kb[current_target_cell]):
                 if(rat_kb):
                     current_target_cell = max(rat_kb, key=rat_kb.get)
-                    print("Target Cell: " , str(current_target_cell), " | Prob: " + str(rat_kb[current_target_cell]))
+                    # print("Target Cell: " , str(current_target_cell), " | Prob: " + str(rat_kb[current_target_cell]))
                     current_path = self.find_path(bot_pos, current_target_cell)
                 else:
                     print("Rat Knowledge Base Is Empty!")
