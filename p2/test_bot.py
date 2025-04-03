@@ -87,7 +87,7 @@ class Baseline:
         self.estimated_pos = self.possible_positions.popitem()
         return self.estimated_pos[0]
     
-    def find_rat(self, est_pos, alpha, thresh):
+    def find_rat(self, est_pos, alpha, thresh):        
         moves = ping_use = 0
         bot_pos = est_pos
         rat_kb = {} #knowledge base for rat (stores probabilities of open cells)
@@ -142,12 +142,12 @@ class Baseline:
             rat_kb = updated_rat_kb
             # print("Rat Knowledge Base: ", str(rat_kb))
             
-            max_avg_prob_cell = self.find_best_cluster(rat_kb)
+            max_prob_cell = max(rat_kb, key=rat_kb.get)
             
-            if not current_path or (max_avg_prob_cell != current_target_cell and rat_kb[max_avg_prob_cell] > threshold * rat_kb[current_target_cell]):
+            if not current_path or (max_prob_cell != current_target_cell and rat_kb[max_prob_cell] > threshold * rat_kb[current_target_cell]):
                 if(rat_kb):
-                    current_target_cell = max_avg_prob_cell
-                    # print("Target Cell: " , str(current_target_cell))
+                    current_target_cell = max(rat_kb, key=rat_kb.get)
+                    # print("Target Cell: " , str(current_target_cell), " | Prob: " + str(rat_kb[current_target_cell]))
                     current_path = self.find_path(bot_pos, current_target_cell)
                 else:
                     print("Rat Knowledge Base Is Empty!")
@@ -157,33 +157,10 @@ class Baseline:
                 moves += 1
                 
                 if(self.rat_detected(bot_pos)): #recheck to see if we are in rat cell
+                    # print("Ending Own Bot Position: " + str(bot_pos))
                     # print("Rat Found!")
                     break
         return moves, ping_use, str(bot_pos)
-    
-    def find_best_cluster(self, rat_kb):
-        if not rat_kb:
-            return None
-        
-        best_cell = None
-        best_avg_prob = 0
-        for cell, prob in rat_kb.items():
-            total_prob = prob
-            valid_cells_count = 1
-            for dir in self.eight_neighbor_dirs:
-                neighbour = (cell[0] + dir[0], cell[1] + dir[1])
-                if neighbour in rat_kb:
-                    valid_cells_count += 1
-                    total_prob += rat_kb[neighbour]
-            avg_prob = total_prob / valid_cells_count
-            
-            #find the max average prob
-            if best_avg_prob < avg_prob:
-                best_avg_prob = avg_prob
-                best_cell = cell
-        
-        return best_cell
-            
     
     #bfs to find path to target cell
     def find_path(self, start, end):
