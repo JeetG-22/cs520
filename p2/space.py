@@ -1,6 +1,7 @@
 import ship
 import baseline_bot
 import own_bot
+import dynamic_bot
 import matplotlib.pyplot as plt
 import numpy as np
 
@@ -9,6 +10,18 @@ import numpy as np
 
 # base_count = 0
 # own_count = 0
+
+# # # Dimensions set to 30x30
+# spaceship = ship.Ship(N)
+
+# Place bot and rat
+spaceship.place_entities()
+
+bot_dynamic = dynamic_bot.Baseline(spaceship)
+moves_dyn, ping_use_dyn, bot_dyn_pos = bot_dynamic.find_rat(bot_dynamic.get_est_pos(bot_dynamic.get_position(2)), .1)
+
+print("Bot Final Position: " + str(bot_dyn_pos))
+print("Rat Final Position: "+ str(bot_dynamic.rat_pos))
 
 # for _ in range(0, num_of_sims):
 #     # Dimensions set to 30x30
