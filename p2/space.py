@@ -50,7 +50,7 @@ import numpy as np
 # Plot your results as a function of alpha.
 
 # 100 simulations with each alpha
-alpha = [0, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1, 1.1, 1.2]
+alpha = [0.05, 0.1, 0.15, 0.2, 0.25, 0.3, 0.35, 0.4, 0.45, 0.5]
 
 N = 30
 num_of_sims = 100
@@ -71,10 +71,10 @@ for a in alpha:
         spaceship.place_entities()
 
         bot_base = baseline_bot.Baseline(spaceship)
-        moves, ping_use, bot_base_pos = bot_base.find_rat(bot_base.get_est_pos(bot_base.get_position(2)), .1)
+        moves, ping_use, bot_base_pos = bot_base.find_rat(bot_base.get_est_pos(bot_base.get_position(2)), a)
 
         bot_own = own_bot.Baseline(spaceship)
-        moves_own, ping_use_own, bot_own_pos = bot_own.find_rat(bot_own.get_est_pos(bot_own.get_position(2)), .1)
+        moves_own, ping_use_own, bot_own_pos = bot_own.find_rat(bot_own.get_est_pos(bot_own.get_position(2)), a)
 
         total_base_moves += moves
         total_own_moves += moves_own
@@ -89,3 +89,4 @@ plt.ylabel('Average Number of Moves to Catch Rat (100 trials)')
 plt.title('Average Number of Moves Taken to Catch Rat vs. Alpha')
 plt.legend()
 plt.show()
+plt.savefig("Plot2.png")
