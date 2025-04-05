@@ -99,16 +99,11 @@ class Baseline:
                 rat_kb[cell_pos] = 1.0 / (count_open_cells - 1)
         # print("Rat Knowledge Base Original: ", str(rat_kb))
         
-        current_target_cell = bot_pos
         current_path = []
-        threshold = 1.25
-        
+                
         while True:
-            # print("Rat Position: " + str(self.rat_pos))
-            ping_result = []
-            for _ in range(0, 5):
-                ping_result.append(self.get_ping(alpha, bot_pos))
-                ping_use += 1
+            ping_use += 1
+            ping_found = self.get_ping(alpha, bot_pos)
             
             if(self.rat_detected(bot_pos)):
                 # print("Rat Found!")
@@ -123,14 +118,14 @@ class Baseline:
                 
                 # get manhattan distance between cell and bot estimated position
                 dist = abs(open_pos[0] - bot_pos[0]) + abs(open_pos[1] - bot_pos[1])
-                updated_prob = prob
-                for ping_found in ping_result:
-                    #two situations: ping is heard or ping is not heard
-                    if(ping_found): #formula: P(rat in cell | ping found) = (P(ping found | rat in cell) * P(rat in cell)) / P(ping found)
-                        prob_ping = np.exp(-alpha * (dist - 1))
-                    else: #formula: P(rat in cell | ping not found) = (P(ping not found | rat in cell) * P(rat in cell)) / P(ping not found)
-                        prob_ping = 1 - np.exp(-alpha * (dist - 1))
-                    updated_prob *= prob_ping
+                updated_prob = 0
+                #two situations: ping is heard or ping is not heard
+                if(ping_found): #formula: P(rat in cell | ping found) = (P(ping found | rat in cell) * P(rat in cell)) / P(ping found)
+                    prob_ping = np.exp(-alpha * (dist - 1))
+                    updated_prob = prob_ping * prob
+                else: #formula: P(rat in cell | ping not found) = (P(ping not found | rat in cell) * P(rat in cell)) / P(ping not found)
+                    prob_ping = 1 - np.exp(-alpha * (dist - 1))
+                    updated_prob = prob_ping * prob
                 updated_rat_kb[open_pos] = updated_prob
                 sum_prob += updated_prob
             
@@ -138,79 +133,34 @@ class Baseline:
             if sum_prob > 0:
                 for cell in updated_rat_kb:
                     updated_rat_kb[cell] /= sum_prob
-            
-            predict_rat_kb = {} #to store probabilities of the potential next cell that rat will move to
-            for cell_pos in self.spaceship.open_cells:
-                if(cell_pos != bot_pos): #to not include bot cell        
-                    predict_rat_kb[cell_pos] = 0
-            
-            for cell, prob in updated_rat_kb.items():
-                open_neighbours = []
-                for cardinal_dir in self.spaceship.neighbour_directions:
-                    neighbour = (cell[0] + cardinal_dir[0], cell[1] + cardinal_dir[1])
-                    if(neighbour in self.spaceship.open_cells and neighbour != bot_pos):
-                        open_neighbours.append(neighbour)
-                if len(open_neighbours) == 0:
-                    continue
-                next_move_prob = prob / len(open_neighbours)
-                for open_neighbour in open_neighbours:
-                    predict_rat_kb[open_neighbour] += next_move_prob
-            
+                
             #update rat knowledge base
-            rat_kb = predict_rat_kb
+            rat_kb = updated_rat_kb
             # print("Rat Knowledge Base: ", str(rat_kb))
             
-            max_avg_prob_cell = self.find_best_cluster(rat_kb)
-            # print(f"Bot position: {bot_pos}")
-            # print(f"Target position: {max_avg_prob_cell}")
-            
-            next_move = self.find_path(bot_pos, max_avg_prob_cell)
-            # print(f"Next move: {next_move}")
-            if next_move == bot_pos:
-                print(self.spaceship)
-                break
-            bot_pos = next_move
-            moves += 1
-            
-            if(self.rat_detected(bot_pos)): #recheck to see if we are in rat cell
-                # print("Rat Found!")
-                break
-            
-            self.move_rat() #move rat for next iteration
+            if not current_path:
+                if(rat_kb):
+                    current_target_cell = max(rat_kb, key=rat_kb.get)
+                    # print("Target Cell: " , str(current_target_cell))
+                    current_path = self.find_path(bot_pos, current_target_cell)
+                     #TODO: what should we do about the edge case where a particular target cell has the highest prob but is unreachable given the bots current position. 
+                     # should i remove it from the rat_kb or should i keep it a let the ping keep going until a new target cell is found (would cause a discrepency
+                     # in the moves and the ping usages).
+                    # if(not current_path):
+                    #     print(str(current_path) + "in here~~~~~~~~~~~~~~~~~~")
+                else:
+                    print("Rat Knowledge Base Is Empty!")
+                    break
+            if current_path:
+                bot_pos = current_path.pop(0)
+                moves += 1
+                
+                if(self.rat_detected(bot_pos)): #recheck to see if we are in rat cell
+                    # print("Ending Baseline Bot Position: " + str(bot_pos))
+                    # print("Rat Found!")
+                    break
+            self.move_rat()
         return moves, ping_use, str(bot_pos)
-    
-    def move_rat(self):
-        open_neighbours = []
-        for cardinal_dir in self.spaceship.neighbour_directions:
-            neighbour = (self.rat_pos[0] + cardinal_dir[0], self.rat_pos[1] + cardinal_dir[1])
-            if neighbour in self.spaceship.open_cells:
-                open_neighbours.append(neighbour)
-        random_neighbour = random.choice(open_neighbours)
-        self.rat_pos = random_neighbour
-    
-    def find_best_cluster(self, rat_kb):
-        if not rat_kb:
-            return None
-        
-        best_cell = None
-        best_avg_prob = 0
-        for cell, prob in rat_kb.items():
-            total_prob = prob
-            valid_cells_count = 1
-            for dir in self.eight_neighbor_dirs:
-                neighbour = (cell[0] + dir[0], cell[1] + dir[1])
-                if neighbour in rat_kb:
-                    valid_cells_count += 1
-                    total_prob += rat_kb[neighbour]
-            avg_prob = total_prob / valid_cells_count
-            
-            #find the max average prob
-            if best_avg_prob < avg_prob:
-                best_avg_prob = avg_prob
-                best_cell = cell
-        
-        return best_cell
-            
     
     #bfs to find path to target cell
     def find_path(self, start, end):
@@ -229,7 +179,7 @@ class Baseline:
                     path.append(cell)
                     cell = parent[cell]
                 path.reverse()
-                return path[1]
+                return path
             
             for cardinal_dir in self.spaceship.neighbour_directions:
                 neighbour = (cardinal_dir[0] + cell[0], cardinal_dir[1] + cell[1])
@@ -237,8 +187,7 @@ class Baseline:
                     queue.append(neighbour)
                     visited.add(neighbour)
                     parent[neighbour] = cell
-                    
-        return None
+        return []
                     
     # returns True if ping is heard
     # sens is a constant specifying the sensitivity of the detector
@@ -256,6 +205,15 @@ class Baseline:
             return True
         
         return False
+    
+    def move_rat(self):
+        open_neighbours = []
+        for cardinal_dir in self.spaceship.neighbour_directions:
+            neighbour = (self.rat_pos[0] + cardinal_dir[0], self.rat_pos[1] + cardinal_dir[1])
+            if neighbour in self.spaceship.open_cells:
+                open_neighbours.append(neighbour)
+        random_neighbour = random.choice(open_neighbours)
+        self.rat_pos = random_neighbour
 
     #for definitive detection
     def rat_detected(self, bot_pos = None):
