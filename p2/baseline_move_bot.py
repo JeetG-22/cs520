@@ -141,7 +141,7 @@ class Baseline:
             if not current_path:
                 if(rat_kb):
                     current_target_cell = max(rat_kb, key=rat_kb.get)
-                    # print("Target Cell: " , str(current_target_cell))
+                    # print("Target Cell Baseline: " , str(current_target_cell))
                     current_path = self.find_path(bot_pos, current_target_cell)
                      #TODO: what should we do about the edge case where a particular target cell has the highest prob but is unreachable given the bots current position. 
                      # should i remove it from the rat_kb or should i keep it a let the ping keep going until a new target cell is found (would cause a discrepency
@@ -154,12 +154,14 @@ class Baseline:
             if current_path:
                 bot_pos = current_path.pop(0)
                 moves += 1
+                # print("Bot Position Baseline: ", str(bot_pos))
                 
                 if(self.rat_detected(bot_pos)): #recheck to see if we are in rat cell
                     # print("Ending Baseline Bot Position: " + str(bot_pos))
                     # print("Rat Found!")
                     break
             self.move_rat()
+            # print("Rat Position Baseline: " + str(self.rat_pos))
         return moves, ping_use, str(bot_pos)
     
     #bfs to find path to target cell

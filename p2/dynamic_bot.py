@@ -229,7 +229,10 @@ class Baseline:
                     path.append(cell)
                     cell = parent[cell]
                 path.reverse()
-                return path[1]
+                if(len(path) > 1):
+                    return path[1]
+                else: #sanity check in case any bugs
+                    return start
             
             for cardinal_dir in self.spaceship.neighbour_directions:
                 neighbour = (cardinal_dir[0] + cell[0], cardinal_dir[1] + cell[1])

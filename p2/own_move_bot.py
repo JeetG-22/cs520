@@ -143,6 +143,24 @@ class Baseline:
             # print("Rat Knowledge Base: ", str(rat_kb))
             
             max_avg_prob_cell = self.find_best_cluster(rat_kb)
+            # print("Target Cell Improved: " , str(current_target_cell))
+            
+            if max_avg_prob_cell is None:
+                # Just pick a random open cell as target
+                available_cells = [cell for cell in self.spaceship.open_cells if cell != bot_pos]
+                if available_cells:
+                    max_avg_prob_cell = random.choice(available_cells)
+                    # Add a small probability to this cell to avoid None issue in future iterations
+                    if max_avg_prob_cell not in rat_kb:
+                        rat_kb[max_avg_prob_cell] = 0.01
+                        # Normalize if needed
+                        sum_prob = sum(rat_kb.values())
+                        if sum_prob > 0:
+                            for cell in rat_kb:
+                                rat_kb[cell] /= sum_prob
+                else:
+                    # No available cells (extremely unlikely)
+                    break
             
             if not current_path or (max_avg_prob_cell != current_target_cell and rat_kb[max_avg_prob_cell] > threshold * rat_kb[current_target_cell]):
                 if(rat_kb):
@@ -155,11 +173,13 @@ class Baseline:
             if current_path:
                 bot_pos = current_path.pop(0)
                 moves += 1
+                # print("Bot Position Improved: ", str(bot_pos))
                 
                 if(self.rat_detected(bot_pos)): #recheck to see if we are in rat cell
                     # print("Rat Found!")
                     break
             self.move_rat()
+            # print("Rat Position Baseline: " + str(self.rat_pos))
         return moves, ping_use, str(bot_pos)
     
     def find_best_cluster(self, rat_kb):
