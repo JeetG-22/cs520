@@ -36,7 +36,7 @@ class Bot:
                     curr_bot_pos = new_bot_pos
                     break
         
-        return self.L.popitem()
+        return self.L.popitem()[0]
 
     # Get the set of possible locations after moving
     def get_L_next(self, bot_pos, L: dict, dir):  # L = set of possible positions
@@ -51,8 +51,8 @@ class Bot:
             success = True
         
         # Attempt move in other locations
-        for pos in L.copy():
-            pos_new = (pos[0] + dir[0], pos[1] + dir[1])
+        for pos, curr_pos in L.copy().items():
+            pos_new = (curr_pos[0] + dir[0], curr_pos[1] + dir[1])
             if success:  # if the move worked and the new pos did not
                 if pos_new not in self.spaceship.open_cells:
                     L.pop(pos)

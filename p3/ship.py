@@ -11,7 +11,7 @@ class Ship:
         self.grid = np.zeros((N, N), dtype=int)
         self.open_cells = {}
         self.init_ship()
-        self.neighbour_directions = [(1, 0), (-1, 0), (0, 1), (0, -1)]
+        self.neighbour_directions = [(1, 0), (0, 1), (-1, 0), (0, -1)]
         
     # Opens cells to start creating the maze
     def init_ship(self):
