@@ -54,7 +54,7 @@ class Bot:
                 move = path[i]
                 all_moves.append(move)
                 dir = (move[0] - curr[0], move[1] - curr[1])
-                self.L, success = self.get_L_next(self.actual_bot_pos, self.L, dir)
+                self.L, success = self.get_L_next(self.L[self.actual_bot_pos], self.L, dir)
                 curr = move
                 i += 1
                 if success != True:  # bot wasn't able to continue down this path
@@ -95,10 +95,7 @@ class Bot:
                 if neighbor not in visited:
 
                     # Check that its in the grid
-                    if 0 <= neighbor[0] < self.spaceship.N and 0 <= neighbor[1] < self.spaceship.N:
-
-                        # Check that it's open cell
-                        if self.spaceship.grid[neighbor[0]][neighbor[1]] == 1:
+                    if neighbor in self.spaceship.open_cells:
 
                             # Add it to the queue
                             self.queue.append(neighbor)
