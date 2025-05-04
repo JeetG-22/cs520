@@ -7,4 +7,4 @@ s.place_entities()
 print(s)
 
 b = bot.Bot(s)
-print({b.get_moves(b.spaceship.open_cells)})
+print(b.get_moves())

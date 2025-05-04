@@ -20,12 +20,13 @@ class Bot:
 
         return bot_pos
     
+
     # Implement the solution in part 2
-    def get_moves(self, L: dict):  # L is the set of possible locations
+    def get_moves(self):  # L is the set of possible locations
         
         # Get an open cell that is a dead end or corner
         # Get a list of dead end cells - cells that don't have neighbors on opposite sides
-        dead_end_cells = L.copy()
+        dead_end_cells = self.L.copy()
         for cell in dead_end_cells.copy():
             x = cell[0]
             y = cell[1]
@@ -39,24 +40,30 @@ class Bot:
         # store the total sequence of moves
         all_moves = []
 
-        while len(L) > 1:
-            location, _ = random.choice(list(L.items()))
+        while len(self.L) > 1:
+            location, _ = random.choice(list(self.L.items()))
 
-            # Get shortest path from L to target
+            # Get shortest path from location to target
             path = self.get_path(location, target)
 
             # Execute the sequence of moves and update L
             curr = location
             i = 1
 
+            # Reset L's values
+            self.L = {k: k for k, _ in self.L.items()}
+
             while i < len(path):
                 move = path[i]
                 all_moves.append(move)
-                L, curr = self.get_L_next(curr, L, (move[0] - curr[0], move[1] - curr[1]))
+                dir = (move[0] - curr[0], move[1] - curr[1])
+                self.L, success = self.get_L_next(self.actual_bot_pos, self.L, dir)
                 curr = move
                 i += 1
+                if success != True:  # bot wasn't able to continue down this path
+                    break
         
-        return all_moves
+        return self.L.popitem()[0], all_moves
 
 
     def get_path(self, source, target):
@@ -139,7 +146,7 @@ class Bot:
                 if pos_new in self.spaceship.open_cells:
                     L.pop(pos)
     
-        return L, new_bot_pos
+        return L, success
 
 
     # Returns the current position of the given val
