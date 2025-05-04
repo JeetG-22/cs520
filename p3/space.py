@@ -1,42 +1,31 @@
 import ship
 import bot
-import random
+import math
 
-# Note: ship does not have closed cells bordering its edges for some reason
-s = ship.Ship(10)
-s.place_entities()
-print(s)
+# Question 2 Plot
+num_moves_per_L = [0] * 10  # Each index will store the average moves at |L| = i/10th of the total open cells
 
-b = bot.Bot(s)
-print(b.get_moves())
+for i in range(100):
+    
+    s = ship.Ship(10)
+    s.place_entities()
+    print(s)
 
-target = b.get_dead_end_cell()
+    b = bot.Bot(s)
+    print(b.get_moves())
 
-# List of possible locations with bot pos in the beginning
-L_values = [b.actual_bot_pos, target] + [cell for cell, _ in s.open_cells.items() if cell != b.actual_bot_pos and cell != target] 
-print(L_values)
+    target = b.get_dead_end_cell()
 
-for i in range(1, len(L_values) + 1):
-    L_list = L_values[:i]
-    L_table = {k: k for k in L_list}
-    print(L_table)
-    pos, num_moves = b.get_moves(L_table)
-    print(num_moves)
+    # List of possible locations with bot pos in the beginning
+    L_values = [b.actual_bot_pos, target] + [cell for cell, _ in s.open_cells.items() if cell != b.actual_bot_pos and cell != target] 
+    print(L_values)
 
-num_moves_per_L = []
+    for j in range(1, len(L_values) + 1):
+        L_list = L_values[:j]
+        L_table = {k: k for k in L_list}
+        pos, moves = b.get_moves(L_table)
 
-# for _ in range(100):
-#     s = ship.Ship(20)
-#     s.place_entities()
-#     b = bot.Bot(s)
-
-#     # List of possible locations with bot pos in the beginning
-#     L_values = [b.actual_bot_pos] + [cell for cell, _ in s.open_cells.items() if cell != b.actual_bot_pos] 
-
-#     for i in range(1, len(L_values) + 1):
-#         L_list = L_values[:i]
-#         L_table = {k: k for k in L_list}
-#         pos, num_moves = b.get_moves(L_table)
-#         num_moves_per_L.append(num_moves)
-
-# print(num_moves_per_L)
+        index = math.floor((j - 1) / len(L_values) * 10)
+        num_moves_per_L[index] += moves
+    
+print(num_moves_per_L)

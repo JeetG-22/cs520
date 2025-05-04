@@ -50,13 +50,24 @@ class Bot:
                 dir = (move[0] - curr[0], move[1] - curr[1])
                 self.L, success = self.get_L_next(self.L[self.actual_bot_pos], self.L, dir)
                 curr = move
-                all_moves.append(curr)
                 i += 1
                 if not success:  # bot wasn't able to continue down this path
                     break
+                all_moves.append(curr)
             
             # Reset L's values
             self.L = {k: k for k, _ in self.L.items()}
+
+            # Sometimes caught in loop with 2 options left
+            curr = location
+
+            while len(self.L) == 2:
+                dir = random.choice(self.spaceship.neighbour_directions)
+                self.L, success = self.get_L_next(self.L[self.actual_bot_pos], self.L, dir)
+                curr = self.get_new_pos(curr, dir)
+                if not success:  # bot wasn't able to continue down this path
+                    break
+                all_moves.append(curr)
         
         return self.L.popitem()[0], len(all_moves)
 
