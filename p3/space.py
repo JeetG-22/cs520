@@ -7,4 +7,4 @@ s.place_entities()
 print(s)
 
 b = bot.Bot(s)
-print(f"Actual pos: {b.get_position(2)}, Estimated pos: {b.get_est_pos()}")
+print({b.get_moves(b.spaceship.open_cells)})

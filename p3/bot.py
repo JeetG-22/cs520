@@ -26,27 +26,28 @@ class Bot:
         # Get an open cell that is a dead end or corner
         # Get a list of dead end cells - cells that don't have neighbors on opposite sides
         dead_end_cells = L.copy()
-        for cell in dead_end_cells:
+        for cell in dead_end_cells.copy():
             x = cell[0]
             y = cell[1]
-            if self.spaceship.grid[x-1][y] == 1 and self.spaceship.grid[x+1][y] == 1:
+            if x - 1 >= 0 and x + 1 < self.spaceship.N and self.spaceship.grid[x-1][y] == 1 and self.spaceship.grid[x+1][y] == 1:
                 dead_end_cells.pop(cell)
-            elif self.spaceship.grid[x][y-1] == 1 and self.spaceship.grid[x][y+1] == 1:
+            elif y - 1 >= 0 and y + 1 < self.spaceship.N and self.spaceship.grid[x][y-1] == 1 and self.spaceship.grid[x][y+1] == 1:
                 dead_end_cells.pop(cell)
-        target = random.choice(dead_end_cells)
+
+        target, _ = random.choice(list(dead_end_cells.items()))
 
         # store the total sequence of moves
         all_moves = []
 
         while len(L) > 1:
-            location = random.choice(L)
+            location, _ = random.choice(list(L.items()))
 
             # Get shortest path from L to target
             path = self.get_path(location, target)
 
             # Execute the sequence of moves and update L
             curr = location
-            i = 0
+            i = 1
 
             while i < len(path):
                 move = path[i]
@@ -140,6 +141,7 @@ class Bot:
     
         return L, new_bot_pos
 
+
     # Returns the current position of the given val
     def get_position(self, val):
         pos = (0, 0)        
@@ -150,6 +152,7 @@ class Bot:
                     pos = (i, j)
                     return pos
                 
+
     # Get bot's position (ignore this)
     def get_est_pos(self):
         curr_bot_pos = self.actual_bot_pos
