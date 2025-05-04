@@ -50,10 +50,7 @@ class Bot:
             curr = location
             i = 1
 
-            # Reset L's values
-            self.L = {k: k for k, _ in self.L.items()}
-
-            while i < len(path):
+            while i < len(path) and len(self.L) > 1:
                 move = path[i]
                 all_moves.append(move)
                 dir = (move[0] - curr[0], move[1] - curr[1])
@@ -62,8 +59,11 @@ class Bot:
                 i += 1
                 if success != True:  # bot wasn't able to continue down this path
                     break
+            
+            # Reset L's values
+            self.L = {k: k for k, _ in self.L.items()}
         
-        return self.L.popitem()[0], all_moves
+        return self.L.popitem()[0]
 
 
     def get_path(self, source, target):
