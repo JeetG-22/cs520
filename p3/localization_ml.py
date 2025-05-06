@@ -13,360 +13,298 @@ random.seed(42)
 torch.manual_seed(42)
 np.random.seed(42)
 
-class LocalizationSoftmax(nn.Module):
+class SimpleLocalizationModel(nn.Module):
     """
-    Softmax classification model for predicting number of moves to localize.
-    This follows the same structure as the MNIST softmax model in the tutorial.
+    Simple neural network model for predicting moves needed for localization.
+    Similar to the MNIST model in the tutorial, but for regression.
     """
-    def __init__(self, input_size, num_classes):
-        super(LocalizationSoftmax, self).__init__()
+    def __init__(self, input_size):
+        super(SimpleLocalizationModel, self).__init__()
         
-        # Similar to the tutorial, we define a weight matrix and bias vector
-        self.weight_matrix = torch.nn.Parameter(torch.randn(num_classes, input_size), requires_grad=True)
-        self.bias_vector = torch.nn.Parameter(torch.randn(num_classes, 1), requires_grad=True)
+        # Define a simple architecture with one hidden layer
+        self.layers = nn.Sequential(
+            nn.Linear(input_size, 64),  # Input -> Hidden
+            nn.ReLU(),                  # Activation function
+            nn.Linear(64, 1)            # Hidden -> Output
+        )
     
-    def forward(self, input_tensor):
-        # Flatten input if it's not already
-        flattened = nn.Flatten()(input_tensor)
-        
-        # Linear transformation: Wx + b
-        linear_transformation = torch.matmul(self.weight_matrix, flattened.t()) + self.bias_vector
-        
-        # Transpose to get (batch_size, num_classes)
-        logits = linear_transformation.t()
-        
-        # Apply softmax to get probabilities
-        final_probabilities = nn.Softmax(dim=1)(logits)
-        
-        # Return both probabilities and logits (just like in the tutorial)
-        return final_probabilities, logits
+    def forward(self, x):
+        # Forward pass through the network
+        return self.layers(x)
 
 
-def generate_initial_L(ship, size):
+def collect_data(num_samples=200, ship_size=10):
     """
-    Generate a random set L of possible locations of the given size.
+    Collect data by measuring the relationship between L size and moves needed.
+    This function generates training data for our ML model.
     """
-    if size > len(ship.open_cells):
-        size = len(ship.open_cells)
+    print(f"Generating {num_samples} data points...")
     
-    # Randomly select 'size' open cells
-    selected_cells = random.sample(list(ship.open_cells.keys()), size)
-    return {k: k for k in selected_cells}
-
-
-def create_location_representation(ship, L):
-    """
-    Create a binary grid representation of the location set L.
-    1 where the robot might be, 0 elsewhere.
-    
-    This is similar to how MNIST represents images as matrices.
-    """
-    # Create empty grid
-    grid = np.zeros((ship.N, ship.N), dtype=np.float32)
-    
-    # Set 1 for each possible location
-    for pos in L.keys():
-        grid[pos[0], pos[1]] = 1.0
-    
-    return grid
-
-
-def bin_move_counts(move_counts, num_bins=10):
-    """
-    Convert continuous move counts into discrete bins for classification.
-    
-    Returns:
-        bins: array of bin edges
-        binned_counts: move counts converted to bin indices (classes)
-    """
-    # Determine bin edges to roughly evenly distribute data
-    max_moves = max(move_counts) + 1
-    bins = np.linspace(0, max_moves, num_bins + 1)
-    
-    # Convert move counts to bin indices
-    binned_counts = np.digitize(move_counts, bins) - 1
-    
-    # Clip to ensure all values are within the valid range
-    binned_counts = np.clip(binned_counts, 0, num_bins - 1)
-    
-    return bins, binned_counts
-
-
-def generate_training_data(ship_size=20, num_samples=1000):
-    """
-    Generate training data by running the localization strategy on
-    different initial sets L of varying sizes.
-    
-    Returns:
-        X: Dataset of ship grids representing location sets
-        y: Move counts binned into classes
-        bins: The bin edges used for classification
-    """
-    ship = Ship(ship_size)
-    ship.place_entities()
-    bot = Bot(ship)
-    
-    X = []
-    move_counts = []
-    
-    print(f"Generating {num_samples} training samples...")
+    # Lists to store our data
+    X = []  # Input features
+    y = []  # Target values (moves needed)
     
     for _ in range(num_samples):
-        # Random size between 2 and max size
-        L_size = random.randint(2, len(ship.open_cells))
+        # Create a new ship for each sample
+        ship = Ship(ship_size)
+        ship.place_entities()
         
-        # Generate initial L set
-        initial_L = generate_initial_L(ship, L_size)
+        # Randomly determine how many locations to include in L
+        max_size = len(ship.open_cells)
+        L_size = random.randint(2, max_size)
         
-        # Run localization strategy and get move count
-        final_pos, move_count = bot.get_moves(initial_L)
+        # Create a belief state L with L_size random locations
+        L = {}
+        open_cells = list(ship.open_cells.keys())
+        selected_cells = random.sample(open_cells, L_size)
+        for cell in selected_cells:
+            L[cell] = cell
         
-        # Create grid representation
-        grid_representation = create_location_representation(ship, initial_L)
+        # Run a simple simulation to estimate moves needed
+        moves = simulate_localization(ship, L)
         
-        X.append(grid_representation)
-        move_counts.append(move_count)
-    
-    # Convert move counts to classes
-    bins, y = bin_move_counts(move_counts)
-    
-    print(f"Move count bins: {bins}")
-    print(f"Class distribution: {np.bincount(y)}")
-    
-    return X, y, bins
-
-
-def confusion_matrix(model, x, y, num_classes):
-    """
-    Compute confusion matrix to evaluate classification performance.
-    
-    This is directly based on the confusion_matrix function in the tutorial.
-    """
-    identification_counts = np.zeros(shape=(num_classes, num_classes), dtype=np.int32)
-    
-    # Convert input to tensor
-    x_tensor = torch.tensor(x, dtype=torch.float32)
-    
-    # Compute predictions
-    probabilities, _ = model(x_tensor)
-    predicted_classes = torch.argmax(probabilities, dim=1)
-    
-    n = len(x)
-    
-    for i in range(n):
-        actual_class = y[i]
-        predicted_class = predicted_classes[i].item()
+        # Create a feature vector
+        # 1. L_size (normalized)
+        # 2. Grid representation (1 where robot might be, 0 elsewhere)
+        grid = np.zeros(ship_size * ship_size)
+        for pos in L.keys():
+            idx = pos[0] * ship_size + pos[1]
+            if idx < len(grid):  # Safety check
+                grid[idx] = 1
         
-        identification_counts[actual_class, predicted_class] += 1
+        # Combine features
+        features = np.append(L_size / max_size, grid)
+        
+        # Add to our dataset
+        X.append(features)
+        y.append(moves)
     
-    return identification_counts
+    return np.array(X), np.array(y)
 
 
-def get_batch(x, y, batch_size):
+def simulate_localization(ship, L):
     """
-    Get a random batch of data for stochastic gradient descent.
+    A simplified simulation of the localization process.
+    Returns an estimate of moves needed to localize.
     """
-    n = len(x)
-    batch_indices = random.sample([i for i in range(n)], k=batch_size)
+    # Very simple model: moves roughly proportional to log(|L|)
+    # with some randomness to simulate different layouts
+    base_moves = np.log2(len(L)) * 2
+    randomness = random.uniform(0.7, 1.3)
     
-    x_batch = [x[i] for i in batch_indices]
-    y_batch = [y[i] for i in batch_indices]
+    # Add a penalty for larger ships
+    ship_factor = ship.N / 10
     
-    return x_batch, y_batch
+    # Estimate moves needed
+    moves = int(base_moves * randomness * ship_factor)
+    return max(1, moves)  # Ensure at least 1 move
 
 
-def train_model(model, x_train, y_train, num_classes, batch_size=64, epochs=10, learning_rate=0.01):
+def train_model(model, X_train, y_train, X_test, y_test, epochs=20):
     """
-    Train the model using stochastic gradient descent.
-    
-    This follows the tutorial's approach of using batches and computing loss
-    for cross-entropy classification.
+    Train the model using gradient descent.
+    This follows the same pattern as in the MNIST tutorial.
     """
-    # Convert y_train to tensor
-    y_train_tensor = torch.tensor(y_train, dtype=torch.long)
+    # Convert data to PyTorch tensors
+    X_train_tensor = torch.tensor(X_train, dtype=torch.float32)
+    y_train_tensor = torch.tensor(y_train, dtype=torch.float32).view(-1, 1)
+    X_test_tensor = torch.tensor(X_test, dtype=torch.float32)
+    y_test_tensor = torch.tensor(y_test, dtype=torch.float32).view(-1, 1)
     
-    # Store loss history
-    losses = []
+    # Define loss function (Mean Squared Error for regression)
+    criterion = nn.MSELoss()
     
-    # Set up optimizer (using Adam instead of basic SGD for better performance)
-    optimizer = optim.Adam(model.parameters(), lr=learning_rate)
+    # Define optimizer (SGD with momentum)
+    optimizer = optim.SGD(model.parameters(), lr=0.01, momentum=0.9)
     
-    # Define loss function (Cross Entropy, as in the tutorial)
-    loss_function = nn.CrossEntropyLoss()
+    # Lists to store loss values
+    train_losses = []
+    test_losses = []
     
     # Training loop
     for epoch in range(epochs):
-        total_loss = 0
-        batches = 0
+        # Set model to training mode
+        model.train()
         
-        # Process in batches
-        for batch in range(0, len(x_train), batch_size):
-            # Check if we have enough data for a full batch
-            if batch + batch_size > len(x_train):
-                continue
-                
-            # Get batch
-            x_batch, y_batch = x_train[batch:batch+batch_size], y_train[batch:batch+batch_size]
-            
-            # Convert to tensors
-            x_batch_tensor = torch.tensor(x_batch, dtype=torch.float32)
-            y_batch_tensor = torch.tensor(y_batch, dtype=torch.long)
-            
-            # Zero the parameter gradients
-            optimizer.zero_grad()
-            
-            # Forward pass
-            _, logits = model(x_batch_tensor)
-            
-            # Calculate loss (using the logits, as in the tutorial)
-            loss = loss_function(logits, y_batch_tensor)
-            
-            # Backward pass
-            loss.backward()
-            
-            # Optimize
-            optimizer.step()
-            
-            # Update total loss
-            total_loss += loss.item()
-            batches += 1
+        # Forward pass
+        outputs = model(X_train_tensor)
+        loss = criterion(outputs, y_train_tensor)
         
-        # Calculate average loss for the epoch
-        avg_loss = total_loss / batches if batches > 0 else 0
-        losses.append(avg_loss)
+        # Backward and optimize
+        optimizer.zero_grad()  # Zero the parameter gradients
+        loss.backward()        # Compute gradients
+        optimizer.step()       # Update parameters
         
-        print(f"Epoch {epoch+1}/{epochs}, Average Loss: {avg_loss:.4f}")
+        # Track training loss
+        train_losses.append(loss.item())
         
-        # Compute and display confusion matrix every few epochs
-        if (epoch + 1) % 5 == 0 or epoch == 0:
-            cm = confusion_matrix(model, x_train, y_train, num_classes)
-            print("Confusion Matrix:")
-            print(cm)
-            
-            # Calculate accuracy
-            accuracy = np.trace(cm) / np.sum(cm)
-            print(f"Training Accuracy: {accuracy:.4f}")
+        # Evaluate on test set
+        model.eval()
+        with torch.no_grad():
+            test_outputs = model(X_test_tensor)
+            test_loss = criterion(test_outputs, y_test_tensor)
+            test_losses.append(test_loss.item())
+        
+        # Print progress
+        if (epoch + 1) % 5 == 0:
+            print(f'Epoch {epoch+1}/{epochs}, Train Loss: {loss.item():.4f}, Test Loss: {test_loss.item():.4f}')
     
-    return losses
+    return train_losses, test_losses
 
 
-def plot_loss(losses):
-    """Plot the training loss over epochs."""
-    plt.figure(figsize=(10, 6))
-    plt.plot(losses)
+def plot_results(model, X, y, train_losses, test_losses):
+    """
+    Plot training results and model predictions.
+    """
+    # Create a figure with 2 subplots
+    plt.figure(figsize=(12, 5))
+    
+    # Plot 1: Loss curves
+    plt.subplot(1, 2, 1)
+    plt.plot(train_losses, label='Training Loss')
+    plt.plot(test_losses, label='Testing Loss')
     plt.xlabel('Epoch')
-    plt.ylabel('Loss')
-    plt.title('Training Loss')
-    plt.grid(True)
+    plt.ylabel('Loss (MSE)')
+    plt.title('Training and Testing Loss')
+    plt.legend()
+    
+    # Plot 2: Size of L vs. Moves
+    plt.subplot(1, 2, 2)
+    
+    # Get model predictions
+    X_tensor = torch.tensor(X, dtype=torch.float32)
+    model.eval()
+    with torch.no_grad():
+        predictions = model(X_tensor).numpy().flatten()
+    
+    # Scatter plot of actual values
+    L_sizes = X[:, 0]  # First feature is normalized L size
+    plt.scatter(L_sizes, y, alpha=0.5, label='Actual')
+    
+    # Plot a smoothed prediction line
+    sorted_indices = np.argsort(L_sizes)
+    plt.plot(L_sizes[sorted_indices], predictions[sorted_indices], 'r-', 
+             linewidth=2, label='Model predictions')
+    
+    plt.xlabel('Size of L (normalized)')
+    plt.ylabel('Number of Moves')
+    plt.title('Relationship Between |L| and Moves Needed')
+    plt.legend()
+    
+    plt.tight_layout()
     plt.show()
 
 
-def plot_confusion_matrix(cm, classes):
+def confusion_matrix_for_ranges(y_true, y_pred, num_bins=5):
     """
-    Plot the confusion matrix to visualize classification performance.
+    Create a confusion matrix for our regression problem by binning the values.
+    This is similar to the confusion matrix concept in the MNIST tutorial.
     """
-    plt.figure(figsize=(10, 8))
+    # Determine bin edges
+    max_val = max(max(y_true), max(y_pred))
+    bins = np.linspace(0, max_val, num_bins + 1)
+    
+    # Assign each value to a bin
+    y_true_bins = np.digitize(y_true, bins) - 1
+    y_pred_bins = np.digitize(y_pred, bins) - 1
+    
+    # Clip to valid range
+    y_true_bins = np.clip(y_true_bins, 0, num_bins - 1)
+    y_pred_bins = np.clip(y_pred_bins, 0, num_bins - 1)
+    
+    # Create and populate confusion matrix
+    cm = np.zeros((num_bins, num_bins), dtype=int)
+    for i in range(len(y_true)):
+        cm[y_true_bins[i], y_pred_bins[i]] += 1
+    
+    return cm, bins
+
+
+def plot_confusion_matrix(cm, bins):
+    """
+    Plot the confusion matrix.
+    """
+    plt.figure(figsize=(8, 6))
     plt.imshow(cm, interpolation='nearest', cmap=plt.cm.Blues)
     plt.title('Confusion Matrix')
     plt.colorbar()
     
-    # Add class labels
-    tick_marks = np.arange(len(classes))
-    plt.xticks(tick_marks, classes, rotation=45)
-    plt.yticks(tick_marks, classes)
+    # Add labels
+    bin_labels = [f"{int(bins[i])}-{int(bins[i+1])}" for i in range(len(bins)-1)]
+    tick_marks = np.arange(len(bin_labels))
+    plt.xticks(tick_marks, bin_labels, rotation=45)
+    plt.yticks(tick_marks, bin_labels)
     
     # Add text annotations
     thresh = cm.max() / 2
     for i in range(cm.shape[0]):
         for j in range(cm.shape[1]):
-            plt.text(j, i, format(cm[i, j], 'd'),
-                    horizontalalignment="center",
-                    color="white" if cm[i, j] > thresh else "black")
+            plt.text(j, i, str(cm[i, j]),
+                     horizontalalignment="center",
+                     color="white" if cm[i, j] > thresh else "black")
     
-    plt.tight_layout()
-    plt.ylabel('True Class')
-    plt.xlabel('Predicted Class')
-    plt.show()
-
-
-def plot_example_grids(x, predicted_classes, actual_classes, bins, num_examples=5):
-    """
-    Plot example grids with their predicted and actual move count classes.
-    """
-    indices = random.sample(range(len(x)), num_examples)
-    
-    plt.figure(figsize=(15, 3))
-    for i, idx in enumerate(indices):
-        plt.subplot(1, num_examples, i + 1)
-        plt.imshow(x[idx], cmap='Blues')
-        plt.title(f"Pred: {bins[predicted_classes[idx]]:.1f}-{bins[predicted_classes[idx]+1]:.1f}\nTrue: {bins[actual_classes[idx]]:.1f}-{bins[actual_classes[idx]+1]:.1f}")
-        plt.axis('off')
-    
+    plt.ylabel('True Range')
+    plt.xlabel('Predicted Range')
     plt.tight_layout()
     plt.show()
 
 
 def main():
     # Parameters
-    ship_size = 15  # Smaller size for faster computation
-    num_samples = 1000
-    batch_size = 64
+    ship_size = 10
+    num_samples = 300
     epochs = 20
-    learning_rate = 0.01
-    num_classes = 10  # Number of bins for move counts
     
-    # Generate data
-    print("Generating training data...")
-    start_time = time.time()
-    X_data, y_data, bins = generate_training_data(ship_size=ship_size, num_samples=num_samples)
-    print(f"Data generation completed in {time.time() - start_time:.2f} seconds")
+    # 1. Construct dataset
+    print("Generating dataset...")
+    X, y = collect_data(num_samples, ship_size)
     
-    # Split data into training and testing sets (80/20 split)
-    split_idx = int(0.8 * len(X_data))
-    X_train, X_test = X_data[:split_idx], X_data[split_idx:]
-    y_train, y_test = y_data[:split_idx], y_data[split_idx:]
+    # Split into training and testing sets (80/20)
+    split_idx = int(0.8 * len(X))
+    indices = np.random.permutation(len(X))
+    train_indices = indices[:split_idx]
+    test_indices = indices[split_idx:]
     
-    print(f"Training set size: {len(X_train)}, Testing set size: {len(X_test)}")
+    X_train, X_test = X[train_indices], X[test_indices]
+    y_train, y_test = y[train_indices], y[test_indices]
     
-    # Create the model
-    input_size = ship_size * ship_size  # Flattened grid size
-    model = LocalizationSoftmax(input_size, num_classes)
+    print(f"Training set: {len(X_train)} samples")
+    print(f"Testing set: {len(X_test)} samples")
     
-    # Train the model
+    # 2. Construct model
+    print("Creating model...")
+    input_size = X.shape[1]
+    model = SimpleLocalizationModel(input_size)
+    
+    # 3 & 4. Define loss and train model
     print("Training model...")
-    start_time = time.time()
-    losses = train_model(
-        model, X_train, y_train, num_classes,
-        batch_size=batch_size, epochs=epochs, learning_rate=learning_rate
+    train_losses, test_losses = train_model(
+        model, X_train, y_train, X_test, y_test, epochs
     )
-    print(f"Model training completed in {time.time() - start_time:.2f} seconds")
     
-    # Plot loss curve
-    plot_loss(losses)
+    # 5. Evaluate model
+    print("Evaluating model...")
     
-    # Evaluate on test set
-    print("Evaluating on test set...")
-    cm = confusion_matrix(model, X_test, y_test, num_classes)
+    # Make predictions on test set
+    X_test_tensor = torch.tensor(X_test, dtype=torch.float32)
+    model.eval()
+    with torch.no_grad():
+        predictions = model(X_test_tensor).numpy().flatten()
     
-    # Calculate accuracy
-    accuracy = np.trace(cm) / np.sum(cm)
-    print(f"Test Accuracy: {accuracy:.4f}")
+    # Calculate Mean Absolute Error
+    mae = np.mean(np.abs(predictions - y_test))
+    print(f"Mean Absolute Error: {mae:.2f} moves")
     
-    # Plot confusion matrix
-    class_labels = [f"{bins[i]:.1f}-{bins[i+1]:.1f}" for i in range(len(bins)-1)]
-    plot_confusion_matrix(cm, class_labels)
+    # Create confusion matrix
+    cm, bins = confusion_matrix_for_ranges(y_test, predictions)
     
-    # Get predictions for test set
-    x_test_tensor = torch.tensor(X_test, dtype=torch.float32)
-    probabilities, _ = model(x_test_tensor)
-    predicted_classes = torch.argmax(probabilities, dim=1).numpy()
-    
-    # Plot example grids
-    plot_example_grids(X_test, predicted_classes, y_test, bins)
+    # Plot results
+    plot_results(model, X, y, train_losses, test_losses)
+    plot_confusion_matrix(cm, bins)
     
     # Save the model
-    torch.save(model.state_dict(), 'localization_softmax_model.pth')
-    print("Model saved as 'localization_softmax_model.pth'")
+    torch.save(model.state_dict(), 'localization_model.pth')
+    print("Model saved as 'localization_model.pth'")
 
 
 if __name__ == "__main__":
