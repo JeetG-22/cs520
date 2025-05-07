@@ -40,46 +40,45 @@ def collect_data(num_samples=200, ship_size=10):
     """
     print(f"Generating {num_samples} data points...")
     
-    # Lists to store our data
-    X = []  # Input features
-    y = []  # Target values (moves needed)
+    features_list = []  # input features
+    moves_list = []  # target values (moves needed)
     
     for _ in range(num_samples):
-        # Create a new ship for each sample
+        # new ship config for each sample
         ship = Ship(ship_size)
         ship.place_entities()
         
-        # Randomly determine how many locations to include in L
-        max_size = len(ship.open_cells)
-        L_size = random.randint(2, max_size)
+        # pick random # of cells for belief state
+        max_cells = len(ship.open_cells)
+        num_cells = random.randint(2, max_cells)
         
-        # Create a belief state L with L_size random locations
+        # create a random belief state
         L = {}
         open_cells = list(ship.open_cells.keys())
-        selected_cells = random.sample(open_cells, L_size)
+        selected_cells = random.sample(open_cells, num_cells) #to get a sample of a random # of open cells
         for cell in selected_cells:
             L[cell] = cell
         
-        # Run a simple simulation to estimate moves needed
+        
+        # get estimate moves from random belief state
         moves = simulate_localization(ship, L)
         
         # Create a feature vector
-        # 1. L_size (normalized)
-        # 2. Grid representation (1 where robot might be, 0 elsewhere)
-        grid = np.zeros(ship_size * ship_size)
+        grid = np.zeros(ship_size * ship_size) #create L to a grid like MNIST images
         for pos in L.keys():
-            idx = pos[0] * ship_size + pos[1]
-            if idx < len(grid):  # Safety check
-                grid[idx] = 1
+            x,y = pos
+            index = x * ship_size + y
+            if index < len(grid): 
+                grid[index] = 1
         
         # Combine features
-        features = np.append(L_size / max_size, grid)
+        features = np.append(num_cells / max_cells, grid)
         
         # Add to our dataset
-        X.append(features)
-        y.append(moves)
+        features_list.append(features)
+        moves_list.append(moves)
     
-    return np.array(X), np.array(y)
+    return np.array(features_list), np.array(moves_list)
 
 
 def simulate_localization(ship, L):
@@ -87,17 +86,17 @@ def simulate_localization(ship, L):
     A simplified simulation of the localization process.
     Returns an estimate of moves needed to localize.
     """
-    # Very simple model: moves roughly proportional to log(|L|)
+    # moves roughly proportional to log(|L|)
     # with some randomness to simulate different layouts
     base_moves = np.log2(len(L)) * 2
     randomness = random.uniform(0.7, 1.3)
     
-    # Add a penalty for larger ships
+    # factor because bigger ships take more moves to get around
     ship_factor = ship.N / 10
     
     # Estimate moves needed
     moves = int(base_moves * randomness * ship_factor)
-    return max(1, moves)  # Ensure at least 1 move
+    return max(1, moves)  # to ensure moves are at least 1
 
 
 def train_model(model, X_train, y_train, X_test, y_test, epochs=20):
@@ -194,61 +193,6 @@ def plot_results(model, X, y, train_losses, test_losses):
     plt.tight_layout()
     plt.show()
 
-
-def confusion_matrix_for_ranges(y_true, y_pred, num_bins=5):
-    """
-    Create a confusion matrix for our regression problem by binning the values.
-    This is similar to the confusion matrix concept in the MNIST tutorial.
-    """
-    # Determine bin edges
-    max_val = max(max(y_true), max(y_pred))
-    bins = np.linspace(0, max_val, num_bins + 1)
-    
-    # Assign each value to a bin
-    y_true_bins = np.digitize(y_true, bins) - 1
-    y_pred_bins = np.digitize(y_pred, bins) - 1
-    
-    # Clip to valid range
-    y_true_bins = np.clip(y_true_bins, 0, num_bins - 1)
-    y_pred_bins = np.clip(y_pred_bins, 0, num_bins - 1)
-    
-    # Create and populate confusion matrix
-    cm = np.zeros((num_bins, num_bins), dtype=int)
-    for i in range(len(y_true)):
-        cm[y_true_bins[i], y_pred_bins[i]] += 1
-    
-    return cm, bins
-
-
-def plot_confusion_matrix(cm, bins):
-    """
-    Plot the confusion matrix.
-    """
-    plt.figure(figsize=(8, 6))
-    plt.imshow(cm, interpolation='nearest', cmap=plt.cm.Blues)
-    plt.title('Confusion Matrix')
-    plt.colorbar()
-    
-    # Add labels
-    bin_labels = [f"{int(bins[i])}-{int(bins[i+1])}" for i in range(len(bins)-1)]
-    tick_marks = np.arange(len(bin_labels))
-    plt.xticks(tick_marks, bin_labels, rotation=45)
-    plt.yticks(tick_marks, bin_labels)
-    
-    # Add text annotations
-    thresh = cm.max() / 2
-    for i in range(cm.shape[0]):
-        for j in range(cm.shape[1]):
-            plt.text(j, i, str(cm[i, j]),
-                     horizontalalignment="center",
-                     color="white" if cm[i, j] > thresh else "black")
-    
-    plt.ylabel('True Range')
-    plt.xlabel('Predicted Range')
-    plt.tight_layout()
-    plt.show()
-
-
 def main():
     # Parameters
     ship_size = 10
@@ -295,17 +239,8 @@ def main():
     mae = np.mean(np.abs(predictions - y_test))
     print(f"Mean Absolute Error: {mae:.2f} moves")
     
-    # Create confusion matrix
-    cm, bins = confusion_matrix_for_ranges(y_test, predictions)
-    
     # Plot results
     plot_results(model, X, y, train_losses, test_losses)
-    plot_confusion_matrix(cm, bins)
-    
-    # Save the model
-    torch.save(model.state_dict(), 'localization_model.pth')
-    print("Model saved as 'localization_model.pth'")
-
 
 if __name__ == "__main__":
     main()
