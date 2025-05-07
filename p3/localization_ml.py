@@ -34,10 +34,6 @@ class SimpleLocalizationModel(nn.Module):
 
 
 def collect_data(num_samples=200, ship_size=10):
-    """
-    Collect data by measuring the relationship between L size and moves needed.
-    This function generates training data for our ML model.
-    """
     print(f"Generating {num_samples} data points...")
     
     features_list = []  # input features
@@ -82,14 +78,10 @@ def collect_data(num_samples=200, ship_size=10):
 
 
 def simulate_localization(ship, L):
-    """
-    A simplified simulation of the localization process.
-    Returns an estimate of moves needed to localize.
-    """
     # moves roughly proportional to log(|L|)
     # with some randomness to simulate different layouts
     base_moves = np.log2(len(L)) * 2
-    randomness = random.uniform(0.7, 1.3)
+    randomness = random.uniform(0.2, 1.7)
     
     # factor because bigger ships take more moves to get around
     ship_factor = ship.N / 10
