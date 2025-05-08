@@ -15,7 +15,7 @@ class MLBot(nn.Module):
         
         self.layers = nn.Sequential(
             nn.Linear(input_size, 64),  
-            nn.ReLU(),                  
+            nn.ReLU(),  # Activation function                 
             nn.Linear(64, 1) 
         )
     
@@ -24,7 +24,7 @@ class MLBot(nn.Module):
         return self.layers(x)
 
 
-def collect_data(num_samples=200, ship_size=10):
+def collect_data(num_samples, ship_size):
     
     features_list = []  # input features
     moves_list = []  # target values (moves needed)
@@ -121,15 +121,12 @@ def train_model(model, X_train, y_train, X_test, y_test, epochs=20):
             test_loss = criterion(test_outputs, y_test_tensor)
             test_losses.append(test_loss.item())
         
-        # Print progress
-        if (epoch + 1) % 5 == 0:
-            print(f'Epoch {epoch+1}/{epochs}, Train Loss: {loss.item():.4f}, Test Loss: {test_loss.item():.4f}')
+        print(f'Epoch {epoch}\n Train Loss: {loss.item()}\n Test Loss: {test_loss.item()}')
     
     return train_losses, test_losses
 
 
 def plot_results(model, X, y, train_losses, test_losses):
-    # Create a figure with 2 subplots
     plt.figure(figsize=(12, 5))
     
     # plot 1: Loss curves
@@ -159,9 +156,9 @@ def plot_results(model, X, y, train_losses, test_losses):
     plt.plot(L_sizes[sorted_indices], predictions[sorted_indices], 'r-', 
              linewidth=2, label='Model predictions')
     
-    plt.xlabel('Size of L Normalized (Sizes in L / Total # Of Open Cells)')
+    plt.xlabel('Size of L divided by # Of Open Cells')
     plt.ylabel('Number of Moves')
-    plt.title('Relationship Between |L| and Moves Needed')
+    plt.title('Size of L vs. Moves Needed')
     plt.legend()
     
     plt.tight_layout()
@@ -174,7 +171,6 @@ def main():
     epochs = 20
     
     # create dataset
-    print("Generating dataset...")
     X, y = collect_data(num_samples, ship_size)
     
     # split into training and testing sets (80/20)
@@ -191,20 +187,18 @@ def main():
     model = MLBot(input_size)
     
     # define loss and train model
-    train_losses, test_losses = train_model(
-        model, X_train, y_train, X_test, y_test, epochs
-    )
+    train_losses, test_losses = train_model(model, X_train, y_train, X_test, y_test, epochs)
     
     # eval model    
     # make predictions on test set
-    X_test_tensor = torch.tensor(X_test, dtype=torch.float32)
+    X_test_tensor = torch.tensor(X_test, dtype = torch.float32)
     model.eval()
     with torch.no_grad():
         predictions = model(X_test_tensor).numpy().flatten()
     
     # calculate Mean Absolute Error
     mae = np.mean(np.abs(predictions - y_test))
-    print(f"Mean Absolute Error: {mae} moves")
+    print(f"MAE: {mae} moves")
     
     # plot results
     plot_results(model, X, y, train_losses, test_losses)
