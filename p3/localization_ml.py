@@ -14,10 +14,7 @@ torch.manual_seed(42)
 np.random.seed(42)
 
 class SimpleLocalizationModel(nn.Module):
-    """
-    Simple neural network model for predicting moves needed for localization.
-    Similar to the MNIST model in the tutorial, but for regression.
-    """
+    #NN for predicting mpoves for localization (similar to MNIST model in the tutorial, but for regression)
     def __init__(self, input_size):
         super(SimpleLocalizationModel, self).__init__()
         
@@ -29,7 +26,7 @@ class SimpleLocalizationModel(nn.Module):
         )
     
     def forward(self, x):
-        # Forward pass through the network
+        # forward pass through the network
         return self.layers(x)
 
 
@@ -91,45 +88,40 @@ def simulate_localization(ship, L):
     return max(1, moves)  # to ensure moves are at least 1
 
 
+#model using gradient descent
 def train_model(model, X_train, y_train, X_test, y_test, epochs=20):
-    """
-    Train the model using gradient descent.
-    This follows the same pattern as in the MNIST tutorial.
-    """
-    # Convert data to PyTorch tensors
+    # convert data to pytorch tensors
     X_train_tensor = torch.tensor(X_train, dtype=torch.float32)
     y_train_tensor = torch.tensor(y_train, dtype=torch.float32).view(-1, 1)
     X_test_tensor = torch.tensor(X_test, dtype=torch.float32)
     y_test_tensor = torch.tensor(y_test, dtype=torch.float32).view(-1, 1)
     
-    # Define loss function (Mean Squared Error for regression)
+    # MSE for loss function
     criterion = nn.MSELoss()
     
-    # Define optimizer (SGD with momentum)
+    # optimizer (SGD with momentum)
     optimizer = optim.SGD(model.parameters(), lr=0.01, momentum=0.9)
     
-    # Lists to store loss values
+    # lists to store loss values
     train_losses = []
     test_losses = []
     
-    # Training loop
     for epoch in range(epochs):
-        # Set model to training mode
-        model.train()
+        model.train() #for training mode
         
-        # Forward pass
+        # forward pass
         outputs = model(X_train_tensor)
         loss = criterion(outputs, y_train_tensor)
         
-        # Backward and optimize
-        optimizer.zero_grad()  # Zero the parameter gradients
-        loss.backward()        # Compute gradients
-        optimizer.step()       # Update parameters
+        # backward and optimize
+        optimizer.zero_grad()  # zero the parameter gradients
+        loss.backward()        # compute gradients
+        optimizer.step()       # update parameters
         
-        # Track training loss
+        # track training loss
         train_losses.append(loss.item())
         
-        # Evaluate on test set
+        # evaluate on test set
         model.eval()
         with torch.no_grad():
             test_outputs = model(X_test_tensor)
@@ -144,13 +136,10 @@ def train_model(model, X_train, y_train, X_test, y_test, epochs=20):
 
 
 def plot_results(model, X, y, train_losses, test_losses):
-    """
-    Plot training results and model predictions.
-    """
     # Create a figure with 2 subplots
     plt.figure(figsize=(12, 5))
     
-    # Plot 1: Loss curves
+    # plot 1: Loss curves
     plt.subplot(1, 2, 1)
     plt.plot(train_losses, label='Training Loss')
     plt.plot(test_losses, label='Testing Loss')
@@ -159,25 +148,25 @@ def plot_results(model, X, y, train_losses, test_losses):
     plt.title('Training and Testing Loss')
     plt.legend()
     
-    # Plot 2: Size of L vs. Moves
+    # plot 2: Size of L vs. Moves
     plt.subplot(1, 2, 2)
     
-    # Get model predictions
+    # model predictions
     X_tensor = torch.tensor(X, dtype=torch.float32)
     model.eval()
     with torch.no_grad():
         predictions = model(X_tensor).numpy().flatten()
     
-    # Scatter plot of actual values
-    L_sizes = X[:, 0]  # First feature is normalized L size
+    # scatter plot of actual values
+    L_sizes = X[:, 0]  # first feature is normalized L size
     plt.scatter(L_sizes, y, alpha=0.5, label='Actual')
     
-    # Plot a smoothed prediction line
+    # plot a smoothed prediction line
     sorted_indices = np.argsort(L_sizes)
     plt.plot(L_sizes[sorted_indices], predictions[sorted_indices], 'r-', 
              linewidth=2, label='Model predictions')
     
-    plt.xlabel('Size of L (normalized)')
+    plt.xlabel('Size of L Normalized (Sizes in L / Total # Of Open Cells)')
     plt.ylabel('Number of Moves')
     plt.title('Relationship Between |L| and Moves Needed')
     plt.legend()
@@ -191,15 +180,15 @@ def main():
     num_samples = 300
     epochs = 20
     
-    # 1. Construct dataset
+    # create dataset
     print("Generating dataset...")
     X, y = collect_data(num_samples, ship_size)
     
-    # Split into training and testing sets (80/20)
-    split_idx = int(0.8 * len(X))
+    # split into training and testing sets (80/20)
+    split_index = int(0.8 * len(X))
     indices = np.random.permutation(len(X))
-    train_indices = indices[:split_idx]
-    test_indices = indices[split_idx:]
+    train_indices = indices[:split_index]
+    test_indices = indices[split_index:]
     
     X_train, X_test = X[train_indices], X[test_indices]
     y_train, y_test = y[train_indices], y[test_indices]
@@ -207,31 +196,31 @@ def main():
     print(f"Training set: {len(X_train)} samples")
     print(f"Testing set: {len(X_test)} samples")
     
-    # 2. Construct model
+    # create model
     print("Creating model...")
     input_size = X.shape[1]
     model = SimpleLocalizationModel(input_size)
     
-    # 3 & 4. Define loss and train model
+    # define loss and train model
     print("Training model...")
     train_losses, test_losses = train_model(
         model, X_train, y_train, X_test, y_test, epochs
     )
     
-    # 5. Evaluate model
+    # eval model
     print("Evaluating model...")
     
-    # Make predictions on test set
+    # make predictions on test set
     X_test_tensor = torch.tensor(X_test, dtype=torch.float32)
     model.eval()
     with torch.no_grad():
         predictions = model(X_test_tensor).numpy().flatten()
     
-    # Calculate Mean Absolute Error
+    # calculate Mean Absolute Error
     mae = np.mean(np.abs(predictions - y_test))
     print(f"Mean Absolute Error: {mae:.2f} moves")
     
-    # Plot results
+    # plot results
     plot_results(model, X, y, train_losses, test_losses)
 
 if __name__ == "__main__":
