@@ -8,21 +8,15 @@ from ship import Ship
 from bot import Bot
 import time
 
-# Set random seed for reproducibility
-random.seed(42)
-torch.manual_seed(42)
-np.random.seed(42)
-
-class SimpleLocalizationModel(nn.Module):
+class MLBot(nn.Module):
     #NN for predicting mpoves for localization (similar to MNIST model in the tutorial, but for regression)
     def __init__(self, input_size):
-        super(SimpleLocalizationModel, self).__init__()
+        super(MLBot, self).__init__()
         
-        # Define a simple architecture with one hidden layer
         self.layers = nn.Sequential(
-            nn.Linear(input_size, 64),  # Input -> Hidden
-            nn.ReLU(),                  # Activation function
-            nn.Linear(64, 1)            # Hidden -> Output
+            nn.Linear(input_size, 64),  
+            nn.ReLU(),                  
+            nn.Linear(64, 1) 
         )
     
     def forward(self, x):
@@ -31,7 +25,6 @@ class SimpleLocalizationModel(nn.Module):
 
 
 def collect_data(num_samples=200, ship_size=10):
-    print(f"Generating {num_samples} data points...")
     
     features_list = []  # input features
     moves_list = []  # target values (moves needed)
@@ -199,7 +192,7 @@ def main():
     # create model
     print("Creating model...")
     input_size = X.shape[1]
-    model = SimpleLocalizationModel(input_size)
+    model = MLBot(input_size)
     
     # define loss and train model
     print("Training model...")
@@ -218,7 +211,7 @@ def main():
     
     # calculate Mean Absolute Error
     mae = np.mean(np.abs(predictions - y_test))
-    print(f"Mean Absolute Error: {mae:.2f} moves")
+    print(f"Mean Absolute Error: {mae} moves")
     
     # plot results
     plot_results(model, X, y, train_losses, test_losses)
