@@ -186,23 +186,16 @@ def main():
     X_train, X_test = X[train_indices], X[test_indices]
     y_train, y_test = y[train_indices], y[test_indices]
     
-    print(f"Training set: {len(X_train)} samples")
-    print(f"Testing set: {len(X_test)} samples")
-    
     # create model
-    print("Creating model...")
     input_size = X.shape[1]
     model = MLBot(input_size)
     
     # define loss and train model
-    print("Training model...")
     train_losses, test_losses = train_model(
         model, X_train, y_train, X_test, y_test, epochs
     )
     
-    # eval model
-    print("Evaluating model...")
-    
+    # eval model    
     # make predictions on test set
     X_test_tensor = torch.tensor(X_test, dtype=torch.float32)
     model.eval()
