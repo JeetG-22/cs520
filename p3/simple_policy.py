@@ -132,7 +132,6 @@ def train_model(X, y, epochs=20):
         print(f"Epoch {epoch}\n Training Loss: {loss.item()}\n Test Loss: {test_loss}")
     
     # plot training progress
-    plt.figure(figsize=(10, 5))
     plt.plot(train_losses, label='Training Loss')
     plt.plot(test_losses, label='Testing Loss')
     plt.xlabel('Epoch')
@@ -234,7 +233,7 @@ def compare_strategies(model, ship_size=10, num_tests=5):
                 success_count += 1
             
             except Exception as e:
-                print(f"Error in test {i+1}: {e}")
+                print(f"Error {e}")
         
         # record only when successful
         if success_count > 0:
@@ -249,15 +248,14 @@ def compare_strategies(model, ship_size=10, num_tests=5):
             # to calculate improvement
             if pi1_avg < pi0_avg:
                 improvement = (pi0_avg - pi1_avg) / pi0_avg * 100
-                print(f"π1 is {improvement}% better for {L_size}")
+                print(f"Improvement: {improvement} for |L|: {L_size}")
             else:
-                print(f"π1 didn't improve over π0 for {L_size}")
+                print(f"No improvement for {L_size}")
     
     # plotting
     if L_sizes:
-        plt.figure(figsize=(10, 6))
-        plt.plot(L_sizes, pi0_moves, 'bo-', label='Original Strategy (π0)')
-        plt.plot(L_sizes, pi1_moves, 'ro-', label='Improved Strategy (π1)')
+        plt.plot(L_sizes, pi0_moves, label='π0')
+        plt.plot(L_sizes, pi1_moves, label='π1')
         plt.xlabel('Size of L')
         plt.ylabel('Average Moves Needed')
         plt.title('Strategy Comparison')
@@ -269,9 +267,9 @@ def compare_strategies(model, ship_size=10, num_tests=5):
         improvements = [(pi0 - pi1) / pi0 * 100 for pi0, pi1 in zip(pi0_moves, pi1_moves) if pi0 > 0]
         if improvements:
             overall_improvement = sum(improvements) / len(improvements)
-            print(f"\nπ1 improved over π0 by {overall_improvement}%")
+            print(f"\nImprovement: {overall_improvement}%")
         else:
-            print("\nπ1 did not show overall improvement over π0.")
+            print("\nNo improvement")
             
         # generate data for plot with |L| on x-axis
         plot_L_vs_moves(model, ship_size)
@@ -309,9 +307,8 @@ def plot_L_vs_moves(model, ship_size, num_samples=3):
             continue
     
     # create plot
-    plt.figure(figsize=(10, 6))
-    plt.plot(L_sizes[:len(pi0_avg_moves)], pi0_avg_moves, 'bo-', label='Original Strategy π0')
-    plt.plot(L_sizes[:len(pi1_avg_moves)], pi1_avg_moves, 'ro-', label='Improved Strategy π1')
+    plt.plot(L_sizes[:len(pi0_avg_moves)], pi0_avg_moves, label='π0')
+    plt.plot(L_sizes[:len(pi1_avg_moves)], pi1_avg_moves, label='π1')
     plt.xlabel('Size of L')
     plt.ylabel('Average number of moves')
     plt.title('|L| vs. Num Moves')
