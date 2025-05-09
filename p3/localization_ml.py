@@ -45,9 +45,8 @@ def collect_data(num_samples, ship_size):
         for cell in selected_cells:
             L[cell] = cell
         
-        
         # get estimate moves from random belief state
-        moves = simulate_localization(ship, L)
+        moves = simulate(ship, L)
         
         # Create a feature vector
         grid = np.zeros(ship_size * ship_size) #create L to a grid like MNIST images
@@ -67,7 +66,7 @@ def collect_data(num_samples, ship_size):
     return np.array(features_list), np.array(moves_list)
 
 
-def simulate_localization(ship, L):
+def simulate(ship, L):
     # moves roughly proportional to log(|L|)
     # with some randomness to simulate different layouts
     base_moves = np.log2(len(L)) * 2
@@ -134,8 +133,8 @@ def plot_results(model, X, y, train_losses, test_losses):
     plt.plot(train_losses, label='Training Loss')
     plt.plot(test_losses, label='Testing Loss')
     plt.xlabel('Epoch')
-    plt.ylabel('Loss (MSE)')
-    plt.title('Training and Testing Loss')
+    plt.ylabel('MSE Loss')
+    plt.title('Loss curves')
     plt.legend()
     
     # plot 2: Size of L vs. Moves
@@ -153,8 +152,7 @@ def plot_results(model, X, y, train_losses, test_losses):
     
     # plot a smoothed prediction line
     sorted_indices = np.argsort(L_sizes)
-    plt.plot(L_sizes[sorted_indices], predictions[sorted_indices], 'r-', 
-             linewidth=2, label='Model predictions')
+    plt.plot(L_sizes[sorted_indices], predictions[sorted_indices], label='Model predictions')
     
     plt.xlabel('Size of L divided by # Of Open Cells')
     plt.ylabel('Number of Moves')
