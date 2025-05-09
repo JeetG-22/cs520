@@ -8,15 +8,14 @@ from ship import Ship
 from bot import Bot
 import time
 
-random.seed(42)
-torch.manual_seed(42)
-
 class SimpleModel(nn.Module):
+
     def __init__(self, input_size):
         super(SimpleModel, self).__init__()
         self.layer1 = nn.Linear(input_size, 64)
         self.layer2 = nn.Linear(64,1)
         self.relu = nn.ReLU()
+
     def forward(self, x):
         x = self.relu(self.layer1(x))
         x = self.relu(self.layer2(x))
@@ -30,13 +29,11 @@ def create_feature_vect(ship, L):
             grid[index] = 1
     return np.append(len(L) / len(ship.open_cells), grid)
 
-
 # Generate random initial belief state
 def make_random_L(ship, size):
     cells = random.sample(list(ship.open_cells.keys()), size)
     return {cell: cell for cell in cells}
 
-# Simulate what happens after a move
 def simulate_move(ship, L, direction):
     # What happens if move succeeds
     L_success = {}
@@ -65,11 +62,11 @@ def strategy_pi0(ship, L):
         final_pos, moves_count = bot_instance.get_moves(L.copy())
         
         return moves_count
+    
     except Exception as e:
         return 50  # Return a moderate value if there's an error
 
-def collect_pi0_data(num_samples=100, ship_size=10):
-    print(f"Collecting {num_samples} data points from Part 2 strategy...")
+def collect_pi0_data(num_samples, ship_size):
     
     X = []  # features
     y = []  # moves needed
@@ -86,18 +83,15 @@ def collect_pi0_data(num_samples=100, ship_size=10):
             
             X.append(create_feature_vect(ship, L))
             y.append(moves)
-            
-            if (i+1) % 10 == 0:
-                print(f"  Collected {i+1} samples")
+
         except Exception as e:
-            print(f"  Error with sample {i+1}: {e}")
+            print(f"Error {e}")
             continue
     
     return np.array(X), np.array(y)
 
 # model to predict moves needed
 def train_model(X, y, epochs=20):
-    print("Training model...")
     
     # split into train/test
     split = int(0.8 * len(X))
@@ -135,8 +129,7 @@ def train_model(X, y, epochs=20):
             test_loss = criterion(test_outputs, y_test).item()
             test_losses.append(test_loss)
         
-        if (epoch+1) % 5 == 0:
-            print(f"Epoch {epoch+1}/{epochs}, Loss: {loss.item():.4f}, Test Loss: {test_loss:.4f}")
+        print(f"Epoch {epoch}\n Training Loss: {loss.item()}\n Test Loss: {test_loss}")
     
     # plot training progress
     plt.figure(figsize=(10, 5))
@@ -144,7 +137,6 @@ def train_model(X, y, epochs=20):
     plt.plot(test_losses, label='Testing Loss')
     plt.xlabel('Epoch')
     plt.ylabel('Loss')
-    plt.title('Training Progress')
     plt.legend()
     plt.grid(True)
     plt.show()
@@ -171,9 +163,7 @@ def strategy_pi1(model, ship, L):
         directions = [(0,-1), (1,0), (0,1), (-1,0)]  
         direction_names = ["Up", "Right", "Down", "Left"]
         expected_moves = []
-        
-        print(f"Evaluating directions for state with |L| = {len(L)}:")
-        
+                
         for i, direction in enumerate(directions):
             # simulate what happens after this move
             L_success, L_fail = simulate_move(ship, L, direction)
@@ -185,7 +175,6 @@ def strategy_pi1(model, ship, L):
             # skip if this direction doesn't reduce uncertainty
             if L_success and L_fail and len(L_success) == len(L) and len(L_fail) == len(L):
                 expected_moves.append(float('inf'))
-                print(f"  {direction_names[i]}: No uncertainty reduction, skipping")
                 continue
                 
             # use model to predict moves for each outcome
@@ -195,20 +184,14 @@ def strategy_pi1(model, ship, L):
             # expected moves = 1 (for this move) + weighted average of outcomes
             total_expected = 1 + p_success * moves_success + p_fail * moves_fail
             expected_moves.append(total_expected)
-            
-            print(f"  {direction_names[i]}: Expected {total_expected:.2f} moves " +
-                  f"(Success: {p_success:.2f}→{len(L_success) if L_success else 0} cells, " +
-                  f"Fail: {p_fail:.2f}→{len(L_fail) if L_fail else 0} cells)")
         
         # to find best directtion
         if expected_moves and min(expected_moves) < float('inf'):
             best_idx = expected_moves.index(min(expected_moves))
-            print(f"Best direction: {direction_names[best_idx]} with {expected_moves[best_idx]:.2f} expected moves")
             
             return expected_moves[best_idx]
         
         # use original strategy if model cant find best directon
-        print("No good direction found, using original strategy")
         return strategy_pi0(ship, L)
     
     except Exception as e:
@@ -221,17 +204,13 @@ def strategy_pi1(model, ship, L):
 
 # Compare strategies
 def compare_strategies(model, ship_size=10, num_tests=5):
-    print(f"Comparing strategies on {num_tests} tests per L size...")
-    
     L_sizes = []
     pi0_moves = []
     pi1_moves = []
     
     # different L sizes
     L_size_options = [3, 5, 8, 12, 15]  
-    for L_size in L_size_options:
-        print(f"\nTesting |L| = {L_size}:")
-        
+    for L_size in L_size_options:        
         pi0_total = 0
         pi1_total = 0
         success_count = 0
@@ -253,10 +232,9 @@ def compare_strategies(model, ship_size=10, num_tests=5):
                 pi0_total += moves_pi0
                 pi1_total += moves_pi1
                 success_count += 1
-                
-                print(f"  Test {i+1}: π0={moves_pi0}, π1={moves_pi1}")
+            
             except Exception as e:
-                print(f"  Error in test {i+1}: {e}")
+                print(f"Error in test {i+1}: {e}")
         
         # record only when successful
         if success_count > 0:
@@ -268,14 +246,12 @@ def compare_strategies(model, ship_size=10, num_tests=5):
             pi0_moves.append(pi0_avg)
             pi1_moves.append(pi1_avg)
             
-            print(f"Average for |L|={L_size}: π0={pi0_avg:.2f}, π1={pi1_avg:.2f}")
-            
             # to calculate improvement
             if pi1_avg < pi0_avg:
                 improvement = (pi0_avg - pi1_avg) / pi0_avg * 100
-                print(f"π1 is {improvement:.2f}% better!")
+                print(f"π1 is {improvement}% better for {L_size}")
             else:
-                print("π1 didn't improve over π0 for this size.")
+                print(f"π1 didn't improve over π0 for {L_size}")
     
     # plotting
     if L_sizes:
@@ -293,12 +269,11 @@ def compare_strategies(model, ship_size=10, num_tests=5):
         improvements = [(pi0 - pi1) / pi0 * 100 for pi0, pi1 in zip(pi0_moves, pi1_moves) if pi0 > 0]
         if improvements:
             overall_improvement = sum(improvements) / len(improvements)
-            print(f"\nOverall, π1 improved over π0 by {overall_improvement:.2f}%")
+            print(f"\nπ1 improved over π0 by {overall_improvement}%")
         else:
             print("\nπ1 did not show overall improvement over π0.")
             
         # generate data for plot with |L| on x-axis
-        print("\nGenerating plot data for different |L| values...")
         plot_L_vs_moves(model, ship_size)
 
 def plot_L_vs_moves(model, ship_size, num_samples=3):
@@ -335,11 +310,11 @@ def plot_L_vs_moves(model, ship_size, num_samples=3):
     
     # create plot
     plt.figure(figsize=(10, 6))
-    plt.plot(L_sizes[:len(pi0_avg_moves)], pi0_avg_moves, 'bo-', label='Original Strategy (π0)')
-    plt.plot(L_sizes[:len(pi1_avg_moves)], pi1_avg_moves, 'ro-', label='Improved Strategy (π1)')
-    plt.xlabel('Size of L (number of possible locations)')
-    plt.ylabel('Average number of moves needed')
-    plt.title('Localization Performance: |L| vs. Moves')
+    plt.plot(L_sizes[:len(pi0_avg_moves)], pi0_avg_moves, 'bo-', label='Original Strategy π0')
+    plt.plot(L_sizes[:len(pi1_avg_moves)], pi1_avg_moves, 'ro-', label='Improved Strategy π1')
+    plt.xlabel('Size of L')
+    plt.ylabel('Average number of moves')
+    plt.title('|L| vs. Num Moves')
     plt.legend()
     plt.grid(True)
     plt.show()
@@ -347,7 +322,7 @@ def plot_L_vs_moves(model, ship_size, num_samples=3):
 def main():
     ship_size = 10
     num_samples = 50
-    num_tests = 10  # Keep small for demonstration
+    num_tests = 10
     
     # collect data from original strategy
     X, y = collect_pi0_data(num_samples, ship_size)
@@ -355,10 +330,9 @@ def main():
     # only continue if we have data
     if len(X) > 0:
         model = train_model(X, y)
-        
         compare_strategies(model, ship_size, num_tests)
     else:
-        print("Error: Could not collect enough data. Please check your Bot implementation.")
+        print("Could not collect enough data")
 
 if __name__ == "__main__":
     main()
