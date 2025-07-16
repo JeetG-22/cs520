@@ -42,5 +42,6 @@ and then if we need to update the requirements again later:
 pip install -r requirements.txt
 ```
 
-# P3 Explanation
-We want to localize the target cell (figure out the exact position of the "bot") in a maze-like 2-D numpy matrix (the ship) in the least number of moves possible. We are not allowed to traverse the grid to find out where the target cell is, but rather are given some set of candidate open cells and have to figure out which one the bot is in, using the fact that we can attempt to move in a given direction, and if the movement is blocked, the bot will remain in the same cell. The bot has access to a map of the ship, is able to move in each of the cardinal directions, and starts with a set of possible locations.  
+# Explanation
+## P3
+We want to localize the target cell (figure out the exact position of the "bot") in a maze-like 2-D numpy matrix (the ship) in the least number of moves possible. We are not allowed to traverse the grid to find out where the target cell is, but rather are given some set of candidate open cells and have to figure out which one the bot is in, using the fact that we can attempt to move in a given direction, and if the movement is blocked, the bot will remain in the same cell. The bot has access to a map of the ship, is able to move in each of the cardinal directions, and starts with a set of possible locations. P3 involves creating a Pytorch model to localize the bot in the least number of moves possible and attempt to learn the "optimal" strategy for doing so.
